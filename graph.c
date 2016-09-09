@@ -66,8 +66,8 @@ void swap(float *a, float *b) {
     *b = tmp;
 }
 
-float plot(expr e, float x) {
-    return try(evalexpr(e, trx(x)));
+float plot(expr *e, float x) {
+    return try(expr_eval(e, trx(x)));
 }
 
 void grf_draw() {
@@ -125,7 +125,7 @@ static void updatescale() {
     grf_draw(); /* Refresh graph screen */
 }
 
-graph newgraph(expr e) {
+graph newgraph(expr *e) {
     graph g = {
         e, 
         nextcolor()
@@ -136,7 +136,7 @@ graph newgraph(expr e) {
 void grf_init() {
     graphs = malloc(sizeof(graph));
     graphcount = 1;
-    graphs[0] = newgraph(newxexpr()); /* DEBUG (could add default graph later) */
+    graphs[0] = newgraph(expr_new_add(expr_new_x(), expr_new_const(3))); /* DEBUG (could add default graph later) */
     getsize();
 
     init_pair(COLOR_GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
@@ -147,7 +147,7 @@ void grf_init() {
     panx = scrw / 2.0f; /* Make sure to divide by floats */
 	pany = scrh / 2.0f;
 	
-	sclex = scley = 20;
+	sclex = scley = 4;
 	updatescale(); /* Initial draw call as well */
 }
 
@@ -211,7 +211,7 @@ void grf_loop() {
 void grf_end() {
     int i;
     for(i = 0; i < graphcount; ++i) {
-        freeexpr(graphs[i].expression);
+        expr_free(graphs[i].expression);
     }
     free(graphs);
 }

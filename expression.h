@@ -3,33 +3,24 @@
 
 typedef float (*evaluator)(void *data, float x);
 
-typedef struct expression {
+typedef struct expr {
     void* data;
     evaluator evaluate;
     void (*free)(void *data);
-} expression_td;
+} expr;
 
-typedef expression_td *expr;
+expr *expr_new(void);
 
-expr newexpr(void);
+float expr_eval(expr*, float);
 
-float evalexpr(expr, float);
+expr *expr_new_const(float);
+expr *expr_new_x();
+expr *expr_new_add(expr*, expr*);
+expr *expr_new_sub(expr*, expr*);
+expr *expr_new_mul(expr*, expr*);
+expr *expr_new_div(expr*, expr*);
+expr *expr_new_pow(expr*, expr*);
 
-expr newconstexpr(float);
-expr newxexpr();
-expr newaddexpr(expr, expr);
-expr newsubexpr(expr, expr);
-expr newmulexpr(expr, expr);
-expr newdivexpr(expr, expr);
-expr newpowexpr(expr, expr);
-
-//float evalconst(void*, float);
-//float evalx(void*, float);
-//float evaladd(void*, float);
-//float evalsub(void*, float);
-//float evalmul(void*, float);
-//float evaldiv(void*, float);
-
-void freeexpr(expr);
+void expr_free(expr*);
 
 #endif

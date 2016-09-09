@@ -3,38 +3,80 @@
 
 #include "expression.h"
 
-void freenull(void *data) { }
+/* TODO: Come up with better macro names */
 
-void freedouble(void *data) {
-    expr* exprs = (expr*)data;
-    freeexpr(exprs[0]);
-    freeexpr(exprs[1]);
+#define EXPR_EVAL_N(n) (expr_eval(((expr**)data)[n], x))
+#define EXPR_EVAL_D(op) (EXPR_EVAL_N(0) op EXPR_EVAL_N(1))
+#define EXPR_EVAL_D_FUNC(f) (f(EXPR_EVAL_N(0), EXPR_EVAL_N(1)))
+
+static float evalconst(void *data, float x) {
+    return ((float*)data)[0];
 }
 
-float evalexpr(expr e, float x) {
-    return e->evaluate(e->data, x);
+static float evalx(void *data, float x) {
+    return x;
 }
 
-expr newexpr() {
-    return malloc(sizeof(expression_td));
+static float evaladd(void *data, float x) {
+    return EXPR_EVAL_D(+);
 }
 
-expr newdoubleexpr(expr first, expr second, evaluator ev) {
-    expr e = newexpr();
+static float evalsub(void *data, float x) {
+    return EXPR_EVAL_D(-);
+}
+
+static float evalmul(void *data, float x) {
+    return EXPR_EVAL_D(*);
+}
+
+static float evaldiv(void *data, float x) {
+    return EXPR_EVAL_D(/);
+}
+
+static float evalpow(void *data, float x) {
+    return EXPR_EVAL_D_FUNC(powf);
+}
+
+#undef EXPR_EVAL_N
+#undef EXPR_EVAL_D
+#undef EXPR_EVAL_D_FUNC
+
+/*-----------------------------------------------------------*/
+
+static void freenull(void *data) { }
+
+static void freedouble(void *data) {
+    expr **exprs = (expr**)data;
+    expr_free(exprs[0]);
+    expr_free(exprs[1]);
+}
+
+static expr *expr_new_double(expr *first, expr *second, evaluator ev) {
+    expr *e = expr_new();
     e->evaluate = ev;
     e->data = malloc(sizeof(expr) * 2);
-    ((expr*)e->data)[0] = first;
-    ((expr*)e->data)[1] = second;
+    ((expr**)e->data)[0] = first;
+    ((expr**)e->data)[1] = second;
     e->free = &freedouble;
     return e;
 }
 
-float evalconst(void *data, float x) {
-    return ((float*)data)[0];
+expr *expr_new() {
+    return malloc(sizeof(expr));
 }
 
-expr newconstexpr(float val) {
-    expr e = newexpr();
+float expr_eval(expr *e, float x) {
+    return e->evaluate(e->data, x);
+}
+
+void expr_free(expr *e) {
+    e->free(e->data);
+    free(e->data);
+    free(e);
+}
+
+expr *expr_new_const(float val) {
+    expr *e = expr_new();
     e->evaluate = &evalconst;
     e->data = malloc(sizeof(float));
     *((float*)e->data) = val;
@@ -42,64 +84,29 @@ expr newconstexpr(float val) {
     return e;
 }
 
-float evalx(void *data, float x) {
-    return x;
-}
-
-expr newxexpr() {
-    expr e = newexpr();
+expr *expr_new_x() {
+    expr *e = expr_new();
     e->evaluate = &evalx;
     e->free = &freenull;
     return e;
 }
 
-float evaladd(void *data, float x) {
-    expr* exprs = (expr*)data;
-    return evalexpr(exprs[0],x) + evalexpr(exprs[1],x);
+expr *expr_new_add(expr *first, expr *second) {
+    return expr_new_double(first, second, &evaladd);
 }
 
-expr newaddexpr(expr first, expr second) {
-    return newdoubleexpr(first, second, &evaladd);
+expr *expr_new_sub(expr *first, expr *second) {
+    return expr_new_double(first, second, &evalsub);
 }
 
-float evalsub(void *data, float x) {
-    expr* exprs = (expr*)data;
-    return evalexpr(exprs[0],x) - evalexpr(exprs[1],x);
+expr *expr_new_mul(expr *first, expr *second) {
+    return expr_new_double(first, second, &evalmul);
 }
 
-expr newsubexpr(expr first, expr second) {
-    return newdoubleexpr(first, second, &evalsub);
+expr *expr_new_div(expr *first, expr *second) {
+    return expr_new_double(first, second, &evaldiv);
 }
 
-float evalmul(void *data, float x) {
-    expr* exprs = (expr*)data;
-    return evalexpr(exprs[0],x) * evalexpr(exprs[1],x);
-}
-
-expr newmulexpr(expr first, expr second) {
-    return newdoubleexpr(first, second, &evalmul);
-}
-
-float evaldiv(void *data, float x) {
-    expr* exprs = (expr*)data;
-    return evalexpr(exprs[0],x) / evalexpr(exprs[1],x);
-}
-
-expr newdivexpr(expr first, expr second) {
-    return newdoubleexpr(first, second, &evaldiv);
-}
-
-float evalpow(void *data, float x) {
-    expr* exprs = (expr*)data;
-    return powf(evalexpr(exprs[0],x), evalexpr(exprs[1],x));
-}
-
-expr newpowexpr(expr first, expr second) {
-    return newdoubleexpr(first, second, &evalpow);
-}
-
-void freeexpr(expr e) {
-    e->free(e->data);
-    free(e->data);
-    free(e);
+expr *new_expr_pow(expr *first, expr *second) {
+    return expr_new_double(first, second, &evalpow);
 }

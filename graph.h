@@ -4,7 +4,7 @@
 #include "expression.h"
 
 typedef struct graph {
-    expr expression;
+    expr *expression;
     int color;
 } graph;
 

@@ -1,0 +1,5 @@
+# Ignore built object files
+*.o
+
+# ...and the built program file
+termcalc

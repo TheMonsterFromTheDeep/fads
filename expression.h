@@ -1,3 +1,6 @@
+#ifndef EXPRESSION_H
+#define EXPRESSION_H
+
 typedef float (*evaluator)(void *data, float x);
 
 typedef struct expression {
@@ -28,3 +31,5 @@ expr newpowexpr(expr, expr);
 //float evaldiv(void*, float);
 
 void freeexpr(expr);
+
+#endif

@@ -8,4 +8,13 @@
 
 #define COLOR_GRAPH_COUNT 3
 
+typedef enum mode {
+    GRAPH,
+    TERMINAL
+} mode;
+
+void mode_set(mode);
+
+void quit(int);
+
 #endif

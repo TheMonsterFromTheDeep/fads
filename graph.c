@@ -175,7 +175,7 @@ void grf_panby(float dx, float dy) {
     grf_draw();
 }
 
-int grf_loop() {
+void grf_loop() {
     int ch = getch();
     switch(ch) {
         case 'e':
@@ -196,6 +196,9 @@ int grf_loop() {
         case 'd':
             grf_panby(-1, 0);
             break;
+        case 'q':
+            quit(0);
+            break;
         //case '.': /* This will be reimplemented soon... */
         //case '>':
         //    mode = &mode_term;
@@ -203,7 +206,6 @@ int grf_loop() {
         //    cmdc = 0;
 
     }
-    return ch != 'q';
 }
 
 void grf_end() {

@@ -11,7 +11,7 @@ typedef struct graph {
 void grf_init(void);
 
 void grf_draw(void);
-int grf_loop(void);
+void grf_loop(void);
 
 void grf_scale(int, int);
 void grf_scaleby(int, int);

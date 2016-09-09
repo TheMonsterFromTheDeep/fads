@@ -1,6 +1,9 @@
 #include <curses.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include "expression.h"
 
 int colors;
 
@@ -15,6 +18,8 @@ int (*mode)(void);
 
 char cmd[256];
 int cmdc;
+
+expr myexpr;
 
 float trx(float x) {
     return sclx * (x - panx);
@@ -33,8 +38,9 @@ float itry(float y) {
 }
 
 float eval(float x) {
-    return sin(x);
+    //return sin(x);
     //return x * x;
+    return evalexpr(myexpr, x);
 }
 
 float plot(float x) {
@@ -194,7 +200,14 @@ int main()
 	noecho();
 	cbreak();
     curs_set(0);
-	
+
+    //myexpr = newmulexpr(newxexpr(), newxexpr());
+    myexpr = newmulexpr(newconstexpr(2), newmulexpr(
+        newaddexpr(newxexpr(), newconstexpr(2)),
+        newaddexpr(newxexpr(), newconstexpr(5))
+    ));
+    //myexpr = newpowexpr(newxexpr(), newconstexpr(2));
+
 	if(has_colors()) {
 	    start_color();
 	    
@@ -220,6 +233,8 @@ int main()
     while(mode());
 	
 	endwin();
+
+    freeexpr(myexpr);
 
 	return 0;
 }

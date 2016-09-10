@@ -12,7 +12,8 @@ typedef enum colors {
     GRAPH_AXES = 1,
     GRAPH_RED,
     GRAPH_GREEN,
-    GRAPH_BLUE
+    GRAPH_BLUE,
+    TERM_TEXT
 } colors;
 
 void init(void);

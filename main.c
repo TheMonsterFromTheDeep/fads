@@ -3,6 +3,7 @@
 
 #include "expression.h"
 #include "graph.h"
+#include "terminal.h"
 
 #include "base.h"
 
@@ -22,6 +23,7 @@ int main()
 
     init(); /* Init main program */
     grf_init(); /* Init graph module */
+    term_init(); /* Init term module */
 	
 	mode_set(GRAPH); /* Set initial mode to graph */
 
@@ -38,8 +40,11 @@ void mode_set(mode m) {
     switch(m) {
         case GRAPH:
             callback = &grf_loop;
+            grf_draw();
             break;
         case TERMINAL:
+            callback = &term_loop;
+            term_activate(); /* TODO: Implement structured system for this */
             break;
     }
 }

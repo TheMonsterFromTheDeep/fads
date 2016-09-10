@@ -1,5 +1,5 @@
 EXEC= termcalc
-TARGETS= main.c expression.c graph.c
+TARGETS= main.c expression.c graph.c terminal.c
 OBJECTS= $(TARGETS:%.c=%.o)
 CCOPT= -lcurses -lm
 

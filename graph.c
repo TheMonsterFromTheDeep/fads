@@ -192,12 +192,9 @@ void grf_loop() {
         case 'q':
             quit(0);
             break;
-        //case '.': /* This will be reimplemented soon... */
-        //case '>':
-        //    mode = &mode_term;
-        //    drawterm();
-        //    cmdc = 0;
-
+        case '.': /* This will be reimplemented soon... */
+        case '>':
+            mode_set(TERMINAL);
     }
 }
 

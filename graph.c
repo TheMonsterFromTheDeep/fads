@@ -92,15 +92,14 @@ void grf_draw() {
                     mvaddch(y,x,'*');
                 }
                 else {
-                    attron(COLOR_PAIR(1));
+                    attron(COLOR_PAIR(GRAPH_AXES));
                     if (fabs(x - x0) <= 0.5) {  
-                        mvaddch(y,x,(fabs(y - y0) <= 0.5) ? '+' : '|');
+                        mvaddch(y,x,(fabs(y - y0) <= 0.5) ? ACS_PLUS : ACS_VLINE);
                     }
                     else if (fabs(y - y0) <= 0.5) {
-                        mvaddch(y,x,'-');
+                        mvaddch(y,x,ACS_HLINE);
                     }
                     else {
-                        attron(COLOR_PAIR(GRAPH_AXES));
                         mvaddch(y,x,' ');
                     }
                 }
@@ -130,7 +129,7 @@ graph newgraph(expr *e) {
 void grf_init() {
     graphs = malloc(sizeof(graph));
     graphcount = 1;
-    graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
+    graphs[0] = newgraph(expr_new_add(expr_new_pow(expr_new_x(), expr_new_const(2)), expr_new_const(3))); /* DEBUG (could add default graph later) */
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);

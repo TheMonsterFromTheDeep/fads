@@ -31,15 +31,15 @@ int nextcolor() {
 int getcolorcode(int color) {
     switch(color) {
         case 0:
-            return COLOR_GRAPH_RED;
+            return GRAPH_RED;
             break;
         case 1:
-            return COLOR_GRAPH_GREEN;
+            return GRAPH_GREEN;
             break;
         case 2:
         default: /* Failsafe - it would be silly for the program
                      to break completely simply due to poor color programming */
-            return COLOR_GRAPH_BLUE;
+            return GRAPH_BLUE;
             break;
     }
 }
@@ -106,7 +106,7 @@ void grf_draw() {
                         mvaddch(y,x,'-');
                     }
                     else {
-                        attron(COLOR_PAIR(COLOR_GRAPH_AXES));
+                        attron(COLOR_PAIR(GRAPH_AXES));
                         mvaddch(y,x,' ');
                     }
                 }
@@ -139,10 +139,10 @@ void grf_init() {
     graphs[0] = newgraph(expr_new_add(expr_new_x(), expr_new_const(3))); /* DEBUG (could add default graph later) */
     getsize();
 
-    init_pair(COLOR_GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
-    init_pair(COLOR_GRAPH_RED, COLOR_RED, COLOR_WHITE);
-    init_pair(COLOR_GRAPH_GREEN, COLOR_GREEN, COLOR_WHITE);
-    init_pair(COLOR_GRAPH_BLUE, COLOR_BLUE, COLOR_WHITE);
+    init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
+    init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);
+    init_pair(GRAPH_GREEN, COLOR_GREEN, COLOR_WHITE);
+    init_pair(GRAPH_BLUE, COLOR_BLUE, COLOR_WHITE);
 
     panx = scrw / 2.0f; /* Make sure to divide by floats */
 	pany = scrh / 2.0f;

@@ -20,6 +20,7 @@ int main()
 	    start_color(); /* Start curses color if possible */
 	}
 
+    init(); /* Init main program */
     grf_init(); /* Init graph module */
 	
 	mode_set(GRAPH); /* Set initial mode to graph */
@@ -27,6 +28,10 @@ int main()
     for(;;) { /* Main loop */
         callback();
     }
+}
+
+void init(void) {
+    getmaxyx(stdscr,screen.height,screen.width);
 }
 
 void mode_set(mode m) {

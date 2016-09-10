@@ -15,8 +15,15 @@ typedef enum colors {
     GRAPH_BLUE
 } colors;
 
+void init(void);
+
 void mode_set(mode);
 
 void quit(int);
+
+struct {
+    int width;
+    int height;
+} screen;
 
 #endif

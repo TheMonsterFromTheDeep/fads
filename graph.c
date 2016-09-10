@@ -16,12 +16,6 @@ static float sclx, scly;
 
 static int sclex, scley;
 
-static int scrw, scrh;
-
-void getsize() {
-    getmaxyx(stdscr,scrh,scrw);
-}
-
 int nextcolor() {
     if(currentcolor < COLOR_GRAPH_COUNT) { ++currentcolor; }
     else { currentcolor = 0; }
@@ -77,7 +71,7 @@ void grf_draw() {
     float *yvals = malloc(sizeof(float) * graphcount), *mins = malloc(sizeof(float) * graphcount), *maxes = malloc(sizeof(float) * graphcount); /* This will probably be moved out of draw eventually */
     clear();
     
-    for(x = 0; x < scrw; ++x) {
+    for(x = 0; x < screen.width; ++x) {
         for(i = 0; i < graphcount; ++i) {
             self = plot(graphs[i].expression, x);
             miny = (plot(graphs[i].expression, x - 1) + self) / 2;
@@ -91,7 +85,7 @@ void grf_draw() {
             mins[i] = miny;
             maxes[i] = maxy;
         }
-        for(y = 0; y < scrh; ++y) {
+        for(y = 0; y < screen.height; ++y) {
             for(i = 0; i < graphcount; ++i) {
                 if((mins[i] <= y && y <= maxes[i]) || (fabs(y - yvals[i]) <= 0.5)) {
                     attron(COLOR_PAIR(getcolorcode(graphs[i].color)));
@@ -136,16 +130,15 @@ graph newgraph(expr *e) {
 void grf_init() {
     graphs = malloc(sizeof(graph));
     graphcount = 1;
-    graphs[0] = newgraph(expr_new_add(expr_new_x(), expr_new_const(3))); /* DEBUG (could add default graph later) */
-    getsize();
+    graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);
     init_pair(GRAPH_GREEN, COLOR_GREEN, COLOR_WHITE);
     init_pair(GRAPH_BLUE, COLOR_BLUE, COLOR_WHITE);
 
-    panx = scrw / 2.0f; /* Make sure to divide by floats */
-	pany = scrh / 2.0f;
+    panx = screen.width / 2.0f; /* Make sure to divide by floats */
+	pany = screen.height / 2.0f;
 	
 	sclex = scley = 4;
 	updatescale(); /* Initial draw call as well */

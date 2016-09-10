@@ -107,6 +107,6 @@ expr *expr_new_div(expr *first, expr *second) {
     return expr_new_double(first, second, &evaldiv);
 }
 
-expr *new_expr_pow(expr *first, expr *second) {
+expr *expr_new_pow(expr *first, expr *second) {
     return expr_new_double(first, second, &evalpow);
 }

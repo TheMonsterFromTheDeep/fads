@@ -1,6 +1,7 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include "base.h"
 #include "expression.h"
 
 typedef struct graph {
@@ -15,8 +16,8 @@ void grf_loop(void);
 
 void grf_scale(int, int);
 void grf_scaleby(int, int);
-void grf_pan(float, float);
-void grf_panby(float, float);
+void grf_pan(num, num);
+void grf_panby(num, num);
 
 void grf_end(void);
 

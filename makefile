@@ -6,5 +6,5 @@ CCOPT= -lcurses -lm
 all : $(OBJECTS)
 	$(CC) $? -o $(EXEC) $(CCOPT)
 
-%.o : %.c
+%.o : %.c %.h base.h
 	$(CC) -c $< -o $@ $(CCOPT)

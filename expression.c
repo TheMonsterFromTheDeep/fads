@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "base.h"
 #include "expression.h"
 
 /* TODO: Come up with better macro names */
@@ -9,31 +10,31 @@
 #define EXPR_EVAL_D(op) (EXPR_EVAL_N(0) op EXPR_EVAL_N(1))
 #define EXPR_EVAL_D_FUNC(f) (f(EXPR_EVAL_N(0), EXPR_EVAL_N(1)))
 
-static float evalconst(void *data, float x) {
+static num evalconst(void *data, num x) {
     return ((float*)data)[0];
 }
 
-static float evalx(void *data, float x) {
+static num evalx(void *data, num x) {
     return x;
 }
 
-static float evaladd(void *data, float x) {
+static num evaladd(void *data, num x) {
     return EXPR_EVAL_D(+);
 }
 
-static float evalsub(void *data, float x) {
+static num evalsub(void *data, num x) {
     return EXPR_EVAL_D(-);
 }
 
-static float evalmul(void *data, float x) {
+static num evalmul(void *data, num x) {
     return EXPR_EVAL_D(*);
 }
 
-static float evaldiv(void *data, float x) {
+static num evaldiv(void *data, num x) {
     return EXPR_EVAL_D(/);
 }
 
-static float evalpow(void *data, float x) {
+static num evalpow(void *data, num x) {
     return EXPR_EVAL_D_FUNC(powf);
 }
 
@@ -65,7 +66,7 @@ expr *expr_new() {
     return malloc(sizeof(expr));
 }
 
-float expr_eval(expr *e, float x) {
+num expr_eval(expr *e, num x) {
     return e->evaluate(e->data, x);
 }
 
@@ -75,7 +76,7 @@ void expr_free(expr *e) {
     free(e);
 }
 
-expr *expr_new_const(float val) {
+expr *expr_new_const(num val) {
     expr *e = expr_new();
     e->evaluate = &evalconst;
     e->data = malloc(sizeof(float));

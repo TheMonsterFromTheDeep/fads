@@ -38,24 +38,24 @@ int getcolorcode(int color) {
     }
 }
 
-float trx(float x) {
+float trx(num x) {
     return sclx * (x - panx);
 }
 
-float itrx(float x) {
+float itrx(num x) {
     return (x / sclx) + panx;
 }
 
-float try(float y) {
+float try(num y) {
     return pany - (scly * y);
 }
 
-float itry(float y) {
+float itry(num y) {
     return (pany - y);
 }
 
-void swap(float *a, float *b) {
-    float tmp = *a;
+void swap(num *a, num *b) {
+    num tmp = *a;
     *a = *b;
     *b = tmp;
 }
@@ -66,9 +66,9 @@ float plot(expr *e, float x) {
 
 void grf_draw() {
     int x, y, i;
-    float self, miny, maxy;
-    float x0 = itrx(0), y0 = itry(0);
-    float *yvals = malloc(sizeof(float) * graphcount), *mins = malloc(sizeof(float) * graphcount), *maxes = malloc(sizeof(float) * graphcount); /* This will probably be moved out of draw eventually */
+    num self, miny, maxy;
+    num x0 = itrx(0), y0 = itry(0);
+    num *yvals = malloc(sizeof(num) * graphcount), *mins = malloc(sizeof(num) * graphcount), *maxes = malloc(sizeof(num) * graphcount); /* This will probably be moved out of draw eventually */
     clear();
     
     for(x = 0; x < screen.width; ++x) {
@@ -156,13 +156,13 @@ void grf_scaleby(int dx, int dy) {
     updatescale();
 }
 
-void grf_pan(float x, float y) {
+void grf_pan(num x, num y) {
     panx = x;
     pany = y;
     grf_draw();
 }
 
-void grf_panby(float dx, float dy) {
+void grf_panby(num dx, num dy) {
     panx += dx;
     pany += dy;
     grf_draw();

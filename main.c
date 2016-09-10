@@ -11,6 +11,7 @@ static void (*callback)(void);
 
 int main()
 {	
+    printf("\e]0;%s\007", "TermCalc");
 	initscr(); /* Curses init statement */
 	
 	noecho(); /* Set up curses mode */

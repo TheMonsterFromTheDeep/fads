@@ -1,7 +1,9 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-typedef float (*evaluator)(void *data, float x);
+#include "base.h"
+
+typedef num (*evaluator)(void *data, num x);
 
 typedef struct expr {
     void* data;
@@ -11,9 +13,9 @@ typedef struct expr {
 
 expr *expr_new(void);
 
-float expr_eval(expr*, float);
+num expr_eval(expr*, num);
 
-expr *expr_new_const(float);
+expr *expr_new_const(num);
 expr *expr_new_x();
 expr *expr_new_add(expr*, expr*);
 expr *expr_new_sub(expr*, expr*);

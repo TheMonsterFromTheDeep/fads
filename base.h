@@ -27,4 +27,6 @@ struct {
     int height;
 } screen;
 
+typedef float num;
+
 #endif

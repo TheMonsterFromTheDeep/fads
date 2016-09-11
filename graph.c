@@ -66,46 +66,66 @@ float plot(expr *e, float x) {
 
 void grf_draw() {
     int x, y, i;
-    num self, miny, maxy;
-    num x0 = itrx(0), y0 = itry(0);
-    num *yvals = malloc(sizeof(num) * graphcount), *mins = malloc(sizeof(num) * graphcount), *maxes = malloc(sizeof(num) * graphcount); /* This will probably be moved out of draw eventually */
+    int x0 = (int)roundf(itrx(0)), y0 = (int)roundf(itry(0));
+    int *dir = malloc(sizeof(int) * screen.width);
+    int *pos = malloc(sizeof(int) * screen.width);
+    int fnzdir; /* "first-non-zero-direction" */
+    int curdir;
     clear();
-    
-    for(x = 0; x < screen.width; ++x) {
-        for(i = 0; i < graphcount; ++i) {
-            self = plot(graphs[i].expression, x);
-            miny = (plot(graphs[i].expression, x - 1) + self) / 2;
-            maxy = (plot(graphs[i].expression, x + 1) + self) / 2;
-            if(maxy < miny) {
-                swap(&maxy, &miny);
-            }
-            if(miny > self) { miny = self; }
-            if(maxy < self) { maxy = self; }
-            yvals[i] = self;
-            mins[i] = miny;
-            maxes[i] = maxy;
+
+    attron(COLOR_PAIR(GRAPH_AXES));
+
+    for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes */
+        move(y, 0);
+        for(x = 0; x < screen.width; ++x) {
+            addch(x == x0 ? (y == y0 ? ACS_PLUS : ACS_VLINE) : y == y0 ? ACS_HLINE : ' ');
         }
-        for(y = 0; y < screen.height; ++y) {
-            for(i = 0; i < graphcount; ++i) {
-                if((mins[i] <= y && y <= maxes[i]) || (fabs(y - yvals[i]) <= 0.5)) {
-                    attron(COLOR_PAIR(getcolorcode(graphs[i].color)));
-                    mvaddch(y,x,'*');
+    }
+
+    for(i = 0; i < graphcount; ++i) {
+        pos[0] = (int)plot(graphs[i].expression, 0);
+        fnzdir = -1;
+        for(x = 1; x < screen.width; ++x) {
+            pos[x] = (int)plot(graphs[i].expression, x);
+            dir[x - 1] = pos[x] - pos[x - 1];
+            if(fnzdir == -1 && dir[x - 1] != 0) { fnzdir = x - 1; }
+        }
+        dir[screen.width - 1] = pos[x] - pos[x - 1];
+        if(fnzdir == -1) {
+            if(dir[screen.width - 1] != 0) { fnzdir = screen.width - 1; }
+        }
+
+        attron(COLOR_PAIR(getcolorcode(graphs[i].color)));
+
+        if(fnzdir == -1) {
+            curdir = 0;
+        }
+        else {
+            curdir = dir[fnzdir];
+        }
+        
+        for(x = 0; x < screen.width; ++x) {
+            if(dir[x] == 0) {
+                if(curdir == 0) {
+                    mvaddch(pos[x], x, ACS_HLINE);
                 }
                 else {
-                    attron(COLOR_PAIR(GRAPH_AXES));
-                    if (fabs(x - x0) <= 0.5) {  
-                        mvaddch(y,x,(fabs(y - y0) <= 0.5) ? ACS_PLUS : ACS_VLINE);
-                    }
-                    else if (fabs(y - y0) <= 0.5) {
-                        mvaddch(y,x,ACS_HLINE);
-                    }
-                    else {
-                        mvaddch(y,x,' ');
-                    }
+                    mvaddch(pos[x] - (curdir > 0), x, '_');
+                }
+            }
+            else {
+                curdir = dir[x] > 0 ? 1 : -1;
+                mvaddch(pos[x], x, dir[x] > 0 ? '\\' : '/');
+                mvaddch(pos[x] + dir[x] - curdir, x, dir[x] > 0 ? '\\' : '/');
+                for(y = 1; y < abs(dir[x]) - 1; ++y) {
+                    mvaddch(pos[x] + curdir * y, x, ACS_VLINE);
                 }
             }
         }
     }
+
+    free(dir);
+    free(pos);
     
     
     refresh();	
@@ -130,6 +150,8 @@ void grf_init() {
     graphs = malloc(sizeof(graph));
     graphcount = 1;
     graphs[0] = newgraph(expr_new_add(expr_new_pow(expr_new_x(), expr_new_const(2)), expr_new_const(3))); /* DEBUG (could add default graph later) */
+    //graphs[0] = newgraph(expr_new_x());
+    //graphs[0] = newgraph(expr_new_const(2));
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);

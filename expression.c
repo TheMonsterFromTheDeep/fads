@@ -9,6 +9,7 @@
 #define EXPR_EVAL_N(n) (expr_eval(((expr**)data)[n], x))
 #define EXPR_EVAL_D(op) (EXPR_EVAL_N(0) op EXPR_EVAL_N(1))
 #define EXPR_EVAL_D_FUNC(f) (f(EXPR_EVAL_N(0), EXPR_EVAL_N(1)))
+#define EXPR_EVAL_S_FUNC(f) (f(EXPR_EVAL_N(0)))
 
 static num evalconst(void *data, num x) {
     return ((float*)data)[0];
@@ -38,18 +39,44 @@ static num evalpow(void *data, num x) {
     return EXPR_EVAL_D_FUNC(powf);
 }
 
+static num evalsin(void *data, num x) {
+    return EXPR_EVAL_S_FUNC(sin);
+}
+
+static num evalcos(void *data, num x) {
+    return EXPR_EVAL_S_FUNC(cos);
+}
+
+static num evaltan(void *data, num x) {
+    return EXPR_EVAL_S_FUNC(tan);
+}
+
 #undef EXPR_EVAL_N
 #undef EXPR_EVAL_D
 #undef EXPR_EVAL_D_FUNC
+#undef EXPR_EVAL_S_FUNC
 
 /*-----------------------------------------------------------*/
 
 static void freenull(void *data) { }
 
+static void freesingle(void *data) {
+    expr_free(*((expr**)data));
+}
+
 static void freedouble(void *data) {
     expr **exprs = (expr**)data;
     expr_free(exprs[0]);
     expr_free(exprs[1]);
+}
+
+static expr *expr_new_single(expr *inner, evaluator ev) {
+    expr *e = expr_new();
+    e->evaluate = ev;
+    e->data = malloc(sizeof(expr));
+    *((expr**)e->data) = inner;
+    e->free = &freesingle;
+    return e;
 }
 
 static expr *expr_new_double(expr *first, expr *second, evaluator ev) {
@@ -110,4 +137,16 @@ expr *expr_new_div(expr *first, expr *second) {
 
 expr *expr_new_pow(expr *first, expr *second) {
     return expr_new_double(first, second, &evalpow);
+}
+
+expr *expr_new_sin(expr *inner) {
+    return expr_new_single(inner, &evalsin);
+}
+
+expr *expr_new_cos(expr *inner) {
+    return expr_new_single(inner, &evalcos);
+}
+
+expr *expr_new_tan(expr *inner) {
+    return expr_new_single(inner, &evaltan);
 }

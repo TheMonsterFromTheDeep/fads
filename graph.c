@@ -90,7 +90,7 @@ void grf_draw() {
             dir[x - 1] = pos[x] - pos[x - 1];
             if(fnzdir == -1 && dir[x - 1] != 0) { fnzdir = x - 1; }
         }
-        dir[screen.width - 1] = pos[x] - pos[x - 1];
+        dir[screen.width - 1] = pos[screen.width - 1] - pos[screen.width - 2];
         if(fnzdir == -1) {
             if(dir[screen.width - 1] != 0) { fnzdir = screen.width - 1; }
         }
@@ -149,7 +149,7 @@ graph newgraph(expr *e) {
 void grf_init() {
     graphs = malloc(sizeof(graph));
     graphcount = 1;
-    graphs[0] = newgraph(expr_new_add(expr_new_pow(expr_new_x(), expr_new_const(2)), expr_new_const(3))); /* DEBUG (could add default graph later) */
+    graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
     //graphs[0] = newgraph(expr_new_x());
     //graphs[0] = newgraph(expr_new_const(2));
 

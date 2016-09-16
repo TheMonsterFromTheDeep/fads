@@ -6,8 +6,9 @@
 #include "graph.h"
 #include "expression.h"
 
-static graph *graphs;
-static int graphcount;
+static graph *graphs; /* TODO : Use some list library or something */
+static size_t graphcount;
+static size_t graphalloc;
 
 static int currentcolor;
 
@@ -16,13 +17,15 @@ static float sclx, scly;
 
 static int sclex, scley;
 
-int nextcolor() {
+const graph err = { NULL, 0 };
+
+static int nextcolor() {
     if(currentcolor < COLOR_GRAPH_COUNT) { ++currentcolor; }
     else { currentcolor = 0; }
     return currentcolor;
 }
 
-int getcolorcode(int color) {
+static int getcolorcode(int color) {
     switch(color) {
         case 0:
             return GRAPH_RED;
@@ -38,29 +41,29 @@ int getcolorcode(int color) {
     }
 }
 
-float trx(num x) {
+static float trx(num x) {
     return sclx * (x - panx);
 }
 
-float itrx(num x) {
+static float itrx(num x) {
     return (x / sclx) + panx;
 }
 
-float try(num y) {
+static float try(num y) {
     return pany - (scly * y);
 }
 
-float itry(num y) {
+static float itry(num y) {
     return (pany - y);
 }
 
-void swap(num *a, num *b) {
+static void swap(num *a, num *b) {
     num tmp = *a;
     *a = *b;
     *b = tmp;
 }
 
-float plot(expr *e, float x) {
+static float plot(expr *e, float x) {
     return try(expr_eval(e, trx(x)));
 }
 
@@ -138,7 +141,7 @@ static void updatescale() {
     grf_draw(); /* Refresh graph screen */
 }
 
-graph newgraph(expr *e) {
+static graph newgraph(expr *e) {
     graph g = {
         e, 
         nextcolor()
@@ -146,10 +149,54 @@ graph newgraph(expr *e) {
     return g;
 }
 
+size_t grf_graphcount() {
+    return graphcount;
+}
+
+graph grf_getgraph(size_t index) {
+    if(index >= graphcount) { return err; }
+    return graphs[index];
+}
+
+graph grf_addgraph(expr *e) {
+    graph ng = newgraph(e);
+    
+    if(graphcount == graphalloc) {
+        graph *tmp = graphs;
+        size_t i = 0;
+        graphalloc *= 2;
+        graphs = malloc(sizeof(graph) * (graphalloc + 1));
+        for(; i < graphcount; ++i) {
+            graphs[i] = tmp[i];
+        }
+        free(tmp);
+    }
+
+    graphs[graphcount++] = ng;
+    
+    return ng;
+}
+
+void grf_removegraph(size_t index) {
+    if(index >= graphcount) { return; }
+    --graphcount;
+    size_t i;
+    /* TODO: Make graph pointer type? */
+    for(i = index; i < graphcount; ++i) { /* Graphcount has been decreased, but there is still a valid graph there */
+        graphs[i] = graphs[i + 1];
+    }
+}
+
+int grf_invalid(graph g) {
+    return !g.expression;
+}
+
 void grf_init() {
-    graphs = malloc(sizeof(graph));
-    graphcount = 1;
-    graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
+    graphs = NULL;
+    graphcount = 0;
+    graphalloc = 0;
+    grf_addgraph(expr_new_pow(expr_new_x(), expr_new_const(2)));
+    //graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
     //graphs[0] = newgraph(expr_new_x());
     //graphs[0] = newgraph(expr_new_const(2));
 

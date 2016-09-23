@@ -162,14 +162,8 @@ graph grf_addgraph(expr *e) {
     graph ng = newgraph(e);
     
     if(graphcount == graphalloc) {
-        graph *tmp = graphs;
-        size_t i = 0;
-        graphalloc *= 2;
-        graphs = malloc(sizeof(graph) * (graphalloc + 1));
-        for(; i < graphcount; ++i) {
-            graphs[i] = tmp[i];
-        }
-        free(tmp);
+        graphalloc = graphalloc * 2 + 1;
+        graphs = realloc(graphs, sizeof(graph) * (graphalloc));
     }
 
     graphs[graphcount++] = ng;
@@ -179,6 +173,7 @@ graph grf_addgraph(expr *e) {
 
 void grf_removegraph(size_t index) {
     if(index >= graphcount) { return; }
+    expr_free(graphs[index].expression);
     --graphcount;
     size_t i;
     /* TODO: Make graph pointer type? */

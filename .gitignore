@@ -3,3 +3,6 @@
 
 # ...and the built program file
 termcalc
+
+# Ignore things I use for testing
+*test*

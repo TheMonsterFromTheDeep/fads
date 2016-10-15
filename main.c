@@ -1,5 +1,6 @@
-#include <curses.h>
+#include <ncurses.h>
 #include <stdlib.h>
+#include <locale.h>
 
 #include "expression.h"
 #include "graph.h"
@@ -11,7 +12,8 @@ static void (*callback)(void);
 
 int main()
 {	
-    //printf("\e]0;%s\007", "TermCalc");
+    setlocale(LC_ALL, ""); /* Required for unicode characters */
+
 	initscr(); /* Curses init statement */
 	
 	noecho(); /* Set up curses mode */

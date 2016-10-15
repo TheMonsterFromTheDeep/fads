@@ -4,8 +4,14 @@
 #include "base.h"
 #include "expression.h"
 
+typedef enum graphtype {
+    SINGLE,
+    MULTI
+} graphtype;
+
 typedef struct graph {
     expr *expression;
+    graphtype type;
     int color;
 } graph;
 

@@ -1,10 +1,11 @@
 #include <stdlib.h>
-#include <curses.h>
+#include <ncurses.h>
 #include <math.h>
 
 #include "base.h"
 #include "graph.h"
 #include "expression.h"
+#include "brscr.h"
 
 static graph *graphs; /* TODO : Use some list library or something */
 static size_t graphcount;
@@ -18,6 +19,8 @@ static float sclx, scly;
 static int sclex, scley;
 
 const graph err = { NULL, 0 };
+
+static brscr *graphscr;
 
 static int nextcolor() {
     if(currentcolor < COLOR_GRAPH_COUNT) { ++currentcolor; }
@@ -70,66 +73,28 @@ static float plot(expr *e, float x) {
 void grf_draw() {
     int x, y, i;
     int x0 = (int)roundf(itrx(0)), y0 = (int)roundf(itry(0));
-    int *dir = malloc(sizeof(int) * screen.width);
-    int *pos = malloc(sizeof(int) * screen.width);
-    int fnzdir; /* "first-non-zero-direction" */
-    int curdir;
+    int *color = malloc(sizeof(int) * graphscr->size);
+    br_clear(graphscr);
     clear();
 
     attron(COLOR_PAIR(GRAPH_AXES));
 
-    for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes */
+    for(i = 0; i < graphcount; ++i) {
+        for(x = 0; x < br_width(graphscr); ++x) {
+            br_setstate(graphscr, x, (int)roundf(plot(graphs[i].expression, x)), 1);
+        }
+    }
+
+    br_drawtocurse(graphscr);
+
+    /*for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes 
         move(y, 0);
         for(x = 0; x < screen.width; ++x) {
             addch(x == x0 ? (y == y0 ? ACS_PLUS : ACS_VLINE) : y == y0 ? ACS_HLINE : ' ');
         }
-    }
+    }*/
 
-    for(i = 0; i < graphcount; ++i) {
-        pos[0] = (int)plot(graphs[i].expression, 0);
-        fnzdir = -1;
-        for(x = 1; x < screen.width; ++x) {
-            pos[x] = (int)plot(graphs[i].expression, x);
-            dir[x - 1] = pos[x] - pos[x - 1];
-            if(fnzdir == -1 && dir[x - 1] != 0) { fnzdir = x - 1; }
-        }
-        dir[screen.width - 1] = pos[screen.width - 1] - pos[screen.width - 2];
-        if(fnzdir == -1) {
-            if(dir[screen.width - 1] != 0) { fnzdir = screen.width - 1; }
-        }
-
-        attron(COLOR_PAIR(getcolorcode(graphs[i].color)));
-
-        if(fnzdir == -1) {
-            curdir = 0;
-        }
-        else {
-            curdir = dir[fnzdir];
-        }
-        
-        for(x = 0; x < screen.width; ++x) {
-            if(dir[x] == 0) {
-                if(curdir == 0) {
-                    mvaddch(pos[x], x, ACS_HLINE);
-                }
-                else {
-                    mvaddch(pos[x] - (curdir > 0), x, '_');
-                }
-            }
-            else {
-                curdir = dir[x] > 0 ? 1 : -1;
-                mvaddch(pos[x], x, dir[x] > 0 ? '\\' : '/');
-                mvaddch(pos[x] + dir[x] - curdir, x, dir[x] > 0 ? '\\' : '/');
-                for(y = 1; y < abs(dir[x]) - 1; ++y) {
-                    mvaddch(pos[x] + curdir * y, x, ACS_VLINE);
-                }
-            }
-        }
-    }
-
-    free(dir);
-    free(pos);
-    
+    free(color); /* Maybe this should be global? */
     
     refresh();	
 }
@@ -143,7 +108,8 @@ static void updatescale() {
 
 static graph newgraph(expr *e) {
     graph g = {
-        e, 
+        e,
+        SINGLE,
         nextcolor()
     };
     return g;
@@ -191,14 +157,13 @@ void grf_init() {
     graphcount = 0;
     graphalloc = 0;
     grf_addgraph(expr_new_pow(expr_new_x(), expr_new_const(2)));
-    //graphs[0] = newgraph(expr_new_pow(expr_new_x(), expr_new_const(2))); /* DEBUG (could add default graph later) */
-    //graphs[0] = newgraph(expr_new_x());
-    //graphs[0] = newgraph(expr_new_const(2));
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);
     init_pair(GRAPH_GREEN, COLOR_GREEN, COLOR_WHITE);
     init_pair(GRAPH_BLUE, COLOR_BLUE, COLOR_WHITE);
+
+    graphscr = br_scrfromcurse();
 
     panx = screen.width / 2.0f; /* Make sure to divide by floats */
 	pany = screen.height / 2.0f;
@@ -267,4 +232,5 @@ void grf_end() {
         expr_free(graphs[i].expression);
     }
     free(graphs);
+    br_free(graphscr);
 }

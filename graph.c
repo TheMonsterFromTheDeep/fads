@@ -85,11 +85,26 @@ void grf_draw() {
 
     attron(COLOR_PAIR(GRAPH_AXES));
 
-    for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes */
+    /*for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes 
         move(y, 0);
         for(x = 0; x < screen.width; ++x) {
             mvprintw(y, x, "%lc", x == x0 ? (y == y0 ? W_PLUS : W_VLINE) : y == y0 ? W_HLINE : ' ');
         }
+    }*/
+
+    for(y = 0; y < screen.height; ++y) {
+        move(y, 0);
+        for(x = 0; x < screen.width; ++x) {
+            addch(' ');
+        }
+    }
+
+    for(x = 0; x < br_width(graphscr); ++x) {
+        br_setstate(graphscr, x, y0, 1); 
+    }
+
+    for(y = 0; y < br_height(graphscr); ++y) {
+        br_setstate(graphscr, x0, y, 1); 
     }
 
     for(i = 0; i < graphcount; ++i) {
@@ -99,7 +114,7 @@ void grf_draw() {
         }
     }
 
-    br_drawtocurse(graphscr);
+    br_overlaycurse(graphscr);
 
     /*for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes 
         move(y, 0);

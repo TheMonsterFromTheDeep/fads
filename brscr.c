@@ -86,7 +86,7 @@ void br_free(brscr *scr) {
     free(scr);
 }
 
-void br_drawtocurse(brscr *scr) {
+void br_overlaycurse(brscr *scr) {
     int x, y;
     int inc = 0;
     for(y = 0; y < scr->height; ++y) {
@@ -96,6 +96,18 @@ void br_drawtocurse(brscr *scr) {
                 attron(COLOR_PAIR(scr->color[br_xyoffset(scr, x, y)]));
                 printw("%lc",scr->data[br_xyoffset(scr, x, y)]);
             }
+        }
+    }
+}
+
+void br_drawtocurse(brscr *scr) {
+    int x, y;
+    int inc = 0;
+    for(y = 0; y < scr->height; ++y) {
+        move(y, 0);
+        for(x = 0; x < scr->width; ++x) {
+            attron(COLOR_PAIR(scr->color[br_xyoffset(scr, x, y)]));
+            printw("%lc",scr->data[br_xyoffset(scr, x, y)]);
         }
     }
 }

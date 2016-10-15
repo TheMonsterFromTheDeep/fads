@@ -21,4 +21,7 @@ int br_width(brscr*);
 int br_height(brscr*);
 int br_xyoffset(brscr*,int,int);
 
+void br_drawtocurse(brscr*);
+void br_overlaycurse(brscr*);
+
 #endif

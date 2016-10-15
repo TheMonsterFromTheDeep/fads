@@ -1,7 +1,7 @@
 EXEC= termcalc
-TARGETS= main.c expression.c graph.c terminal.c
+TARGETS= main.c expression.c graph.c terminal.c brscr.c
 OBJECTS= $(TARGETS:%.c=%.o)
-CCOPT= -lcurses -lm
+CCOPT= -lncursesw -lm
 
 all : $(OBJECTS)
 	$(CC) $? -o $(EXEC) $(CCOPT)

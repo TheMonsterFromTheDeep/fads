@@ -12,10 +12,12 @@ typedef struct brscr {
     int size;
 } brscr;
 
-void br_setstate(brscr*,int,int,int);
 brscr *br_scrfromcurse(void);
 void br_free(brscr*);
 void br_clear(brscr*);
+
+void br_setstate(brscr*,int,int,int);
+void br_colorline(brscr*,int,int,int,int,int);
 
 int br_width(brscr*);
 int br_height(brscr*);

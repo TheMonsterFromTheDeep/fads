@@ -75,22 +75,13 @@ static float plot(expr *e, float x) {
 }
 
 void grf_draw() {
-    int x, y, i;
+    int x, y, i, lasty;
     int x0 = (int)roundf(itrx(0)), y0 = (int)roundf(itry(0));
     for(i = 0; i < graphscr->size; ++i) {
         graphscr->color[i] = GRAPH_AXES;
     }
     br_clear(graphscr);
     clear();
-
-    attron(COLOR_PAIR(GRAPH_AXES));
-
-    /*for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes 
-        move(y, 0);
-        for(x = 0; x < screen.width; ++x) {
-            mvprintw(y, x, "%lc", x == x0 ? (y == y0 ? W_PLUS : W_VLINE) : y == y0 ? W_HLINE : ' ');
-        }
-    }*/
 
     for(y = 0; y < screen.height; ++y) {
         move(y, 0);
@@ -99,29 +90,23 @@ void grf_draw() {
         }
     }
 
-    for(x = 0; x < br_width(graphscr); ++x) {
-        br_setstate(graphscr, x, y0, 1); 
-    }
+    br_colorline(graphscr, 0, y0, br_width(graphscr) - 1, y0, GRAPH_AXES);
+    br_colorline(graphscr, x0, 0, x0, br_height(graphscr) - 1, GRAPH_AXES);
 
     for(y = 0; y < br_height(graphscr); ++y) {
         br_setstate(graphscr, x0, y, 1); 
     }
-
+    
     for(i = 0; i < graphcount; ++i) {
+        lasty = (int)roundf(plot(graphs[0].expression, -1));
         for(x = 0; x < br_width(graphscr); ++x) {
             y = (int)roundf(plot(graphs[i].expression, x));
-            br_setstco(graphscr, x, y, 1, getcolorcode(graphs[i].color));
+            br_colorline(graphscr, x - 1, lasty, x, y, getcolorcode(graphs[i].color));
+            lasty = y;
         }
     }
 
     br_overlaycurse(graphscr);
-
-    /*for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes 
-        move(y, 0);
-        for(x = 0; x < screen.width; ++x) {
-            addch(x == x0 ? (y == y0 ? ACS_PLUS : ACS_VLINE) : y == y0 ? ACS_HLINE : ' ');
-        }
-    }*/
     
     refresh();	
 }
@@ -184,6 +169,7 @@ void grf_init() {
     graphcount = 0;
     graphalloc = 0;
     grf_addgraph(expr_new_pow(expr_new_x(), expr_new_const(2)));
+    grf_addgraph(expr_new_sin(expr_new_x()));
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);

@@ -65,6 +65,127 @@ void br_setstco(brscr *scr, int x, int y, int state, int color) {
     }
 }
 
+static void plotoctant(brscr *scr, int x, int y, int octant, int color) {
+    int outx, outy;
+    switch(octant) {
+        case 0:
+            outx = x;
+            outy = y;
+            break;
+        case 1:
+            outx = y;
+            outy = x;
+            break;
+        case 2:
+            outx = -y;
+            outy = x;
+            break;
+        case 3:
+            outx = -x;
+            outy = y;
+            break;
+        case 4:
+            outx = -x;
+            outy = -y;
+            break;
+        case 5:
+            outx = -y;
+            outy = -x;
+            break;
+        case 6:
+            outx = y;
+            outy = -x;
+            break;
+        case 7:
+            outx = x;
+            outy = -y;
+    }
+    br_setstco(scr, outx, outy, 1, color);
+}
+
+static void brensenham(brscr *scr, int x0, int y0, int x1, int y1, int octant, int color) {
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    int D = 0;
+    int y = y0;
+    int x;
+
+    for (x = x0; x <= x1; ++x) {
+        plotoctant(scr, x, y, octant, color);
+        //br_setstco(scr, x, y, 1, color);
+        D += dy;
+        //
+        if ((D << 1) >= dx) {
+            ++y;
+            D -= dx;
+        }
+        
+    }
+}
+
+static int zerox(int x, int y, int octant) {
+    switch(octant) {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        case 2:
+            return y;
+        case 3:
+            return -x;
+        case 4:
+            return -x;
+        case 5:
+            return -y;
+        case 6:
+            return -y;
+        case 7:
+            return x;
+    }
+}
+
+static int zeroy(int x, int y, int octant) {
+    switch(octant) {
+        case 0:
+            return y;
+        case 1:
+            return x;
+        case 2:
+            return -x;
+        case 3:
+            return y;
+        case 4:
+            return -y;
+        case 5:
+            return -x;
+        case 6:
+            return x;
+        case 7:
+            return -y;
+    }
+}
+
+void br_colorline(brscr *scr, int x0, int y0, int x1, int y1, int color) {
+    int octant;
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    if(dx >= 0) {
+        octant = dy > 0 ? dy > dx :
+                 dy < 0 ? 6 + (-dy < dx) :
+                 0;
+    }
+    else if(dx < 0) {
+        octant = dy > 0 ? 2 + (dy < -dx) :
+                 dy < 0 ? 4 + (-dy > -dx) :
+                 3;
+    }
+    int drx0 = zerox(x0, y0, octant);
+    int dry0 = zeroy(x0, y0, octant);
+    int drx1 = zerox(x1, y1, octant);
+    int dry1 = zeroy(x1, y1, octant);
+    brensenham(scr, drx0, dry0, drx1, dry1, octant, color);
+}
+
 void br_clear(brscr *scr) {
     int i;
     for(i = 0; i < scr->size; ++i) { scr->data[i] = 0x2800; }

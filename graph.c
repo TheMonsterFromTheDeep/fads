@@ -98,7 +98,7 @@ void grf_draw() {
     }
     
     for(i = 0; i < graphcount; ++i) {
-        lasty = (int)roundf(plot(graphs[0].expression, -1));
+        lasty = (int)roundf(plot(graphs[i].expression, -1));
         for(x = 0; x < br_width(graphscr); ++x) {
             y = (int)roundf(plot(graphs[i].expression, x));
             br_colorline(graphscr, x - 1, lasty, x, y, getcolorcode(graphs[i].color));
@@ -173,8 +173,9 @@ void grf_init() {
     graphs = NULL;
     graphcount = 0;
     graphalloc = 0;
-    grf_addgraph(expr_new_pow(expr_new_x(), expr_new_const(2)));
+    grf_addgraph(expr_new_pow(expr_new_x(),expr_new_const(2)));
     grf_addgraph(expr_new_sin(expr_new_x()));
+    
 
     init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
     init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);

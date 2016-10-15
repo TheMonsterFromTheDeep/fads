@@ -1,4 +1,4 @@
-EXEC= termcalc
+EXEC= fads
 TARGETS= main.c expression.c graph.c terminal.c brscr.c
 OBJECTS= $(TARGETS:%.c=%.o)
 CCOPT= -lncursesw -lm

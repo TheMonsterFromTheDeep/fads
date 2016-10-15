@@ -83,6 +83,8 @@ void grf_draw() {
     br_clear(graphscr);
     clear();
 
+    attron(COLOR_PAIR(GRAPH_AXES));
+
     for(y = 0; y < screen.height; ++y) {
         move(y, 0);
         for(x = 0; x < screen.width; ++x) {

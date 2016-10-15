@@ -2,7 +2,7 @@
 *.o
 
 # ...and the built program file
-termcalc
+fads
 
 # Ignore things I use for testing
 *test*

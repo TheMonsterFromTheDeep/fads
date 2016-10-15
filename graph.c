@@ -7,6 +7,10 @@
 #include "expression.h"
 #include "brscr.h"
 
+#define W_HLINE 0x2501
+#define W_VLINE 0x2503
+#define W_PLUS 0x254B
+
 static graph *graphs; /* TODO : Use some list library or something */
 static size_t graphcount;
 static size_t graphalloc;
@@ -73,15 +77,25 @@ static float plot(expr *e, float x) {
 void grf_draw() {
     int x, y, i;
     int x0 = (int)roundf(itrx(0)), y0 = (int)roundf(itry(0));
-    int *color = malloc(sizeof(int) * graphscr->size);
+    for(i = 0; i < graphscr->size; ++i) {
+        graphscr->color[i] = GRAPH_AXES;
+    }
     br_clear(graphscr);
     clear();
 
     attron(COLOR_PAIR(GRAPH_AXES));
 
+    for(y = 0; y < screen.height; ++y) { /* Fill screen and draw axes */
+        move(y, 0);
+        for(x = 0; x < screen.width; ++x) {
+            mvprintw(y, x, "%lc", x == x0 ? (y == y0 ? W_PLUS : W_VLINE) : y == y0 ? W_HLINE : ' ');
+        }
+    }
+
     for(i = 0; i < graphcount; ++i) {
         for(x = 0; x < br_width(graphscr); ++x) {
-            br_setstate(graphscr, x, (int)roundf(plot(graphs[i].expression, x)), 1);
+            y = (int)roundf(plot(graphs[i].expression, x));
+            br_setstco(graphscr, x, y, 1, getcolorcode(graphs[i].color));
         }
     }
 
@@ -93,8 +107,6 @@ void grf_draw() {
             addch(x == x0 ? (y == y0 ? ACS_PLUS : ACS_VLINE) : y == y0 ? ACS_HLINE : ' ');
         }
     }*/
-
-    free(color); /* Maybe this should be global? */
     
     refresh();	
 }

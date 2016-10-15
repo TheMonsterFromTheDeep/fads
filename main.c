@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <locale.h>
+#include <signal.h>
 
 #include "expression.h"
 #include "graph.h"
@@ -10,9 +11,15 @@
 
 static void (*callback)(void);
 
+void on_sigsegv(int signo) {
+    quit(-1);
+}
+
 int main()
 {	
     setlocale(LC_ALL, ""); /* Required for unicode characters */
+
+    sigset(SIGSEGV, on_sigsegv);
 
 	initscr(); /* Curses init statement */
 	
@@ -56,6 +63,10 @@ void quit(int status) {
     endwin(); /* Exit curses mode */
 
     grf_end(); /* Tell graphing module to exit */
+
+    if(status == -1) {
+        puts("Quitting: Segmentation fault.");
+    }
 
     exit(status);
 }

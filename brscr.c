@@ -26,14 +26,35 @@ static int xymask(int x, int y) {
     return 1 << (x * 3) + y;
 }
 
-static int xyoffset(brscr *scr, int x, int y) {
+int br_xyoffset(brscr *scr, int x, int y) {
     return x + y * scr->width;
 }
 
 void br_setstate(brscr *scr, int x, int y, int state) {
     if(x < 0 || x >= br_width(scr)) { return; }
     if(y < 0 || y >= br_height(scr)) { return; }
-    int *mod = scr->data + xyoffset(scr, x / BR_XFAC, y / BR_YFAC);
+    int *mod = scr->data + br_xyoffset(scr, x / BR_XFAC, y / BR_YFAC);
+    x = x % BR_XFAC;
+    y = y % BR_YFAC;
+    if(state) {
+        *mod = ((*mod - 0x2800) | xymask(x, y)) + 0x2800;
+    }
+    else {
+        *mod = ((*mod - 0x2800) & ~xymask(x, y)) + 0x2800;
+    }
+}
+
+void br_setcolor(brscr *scr, int x, int y, int color) {
+    if(x < 0 || x >= br_width(scr)) { return; }
+    if(y < 0 || y >= br_height(scr)) { return; }
+    scr->color[br_xyoffset(scr, x / BR_XFAC, y / BR_YFAC)] = color;
+}
+
+void br_setstco(brscr *scr, int x, int y, int state, int color) {
+    if(x < 0 || x >= br_width(scr)) { return; }
+    if(y < 0 || y >= br_height(scr)) { return; }
+    scr->color[br_xyoffset(scr, x / BR_XFAC, y / BR_YFAC)] = color;
+    int *mod = scr->data + br_xyoffset(scr, x / BR_XFAC, y / BR_YFAC);
     x = x % BR_XFAC;
     y = y % BR_YFAC;
     if(state) {
@@ -54,14 +75,14 @@ brscr *br_scrfromcurse() {
     getmaxyx(stdscr,nscr->height,nscr->width);
     nscr->size = nscr->width * nscr->height;
     nscr->data = malloc(sizeof(int) * nscr->size);
+    nscr->color = malloc(sizeof(int) * nscr->size);
     br_clear(nscr);
     return nscr;
 }
 
 void br_free(brscr *scr) {
-    if(scr->size > 0) {
-        free(scr->data);
-    }
+    free(scr->data);
+    free(scr->color);
     free(scr);
 }
 
@@ -69,9 +90,12 @@ void br_drawtocurse(brscr *scr) {
     int x, y;
     int inc = 0;
     for(y = 0; y < scr->height; ++y) {
-        move(y, 0);
         for(x = 0; x < scr->width; ++x) {
-            printw("%lc",scr->data[xyoffset(scr, x, y)]);
+            if(scr->data[br_xyoffset(scr, x, y)] != 0x2800) {
+                move(y, x);
+                attron(COLOR_PAIR(scr->color[br_xyoffset(scr, x, y)]));
+                printw("%lc",scr->data[br_xyoffset(scr, x, y)]);
+            }
         }
     }
 }

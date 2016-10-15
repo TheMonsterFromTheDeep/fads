@@ -6,6 +6,7 @@
 
 typedef struct brscr {
     int *data;
+    int *color;
     int width;
     int height;
     int size;
@@ -18,5 +19,6 @@ void br_clear(brscr*);
 
 int br_width(brscr*);
 int br_height(brscr*);
+int br_xyoffset(brscr*,int,int);
 
 #endif

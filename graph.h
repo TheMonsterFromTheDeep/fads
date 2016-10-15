@@ -24,6 +24,7 @@ void grf_scale(int, int);
 void grf_scaleby(int, int);
 void grf_pan(num, num);
 void grf_panby(num, num);
+void grf_center(void);
 
 void grf_end(void);
 

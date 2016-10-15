@@ -164,6 +164,11 @@ int grf_invalid(graph g) {
     return !g.expression;
 }
 
+void grf_center() {
+    panx = (screen.width * BR_XFAC) / 2.0f ; /* Make sure to divide by floats */
+	pany = (screen.height * BR_YFAC) / 2.0f;
+}
+
 void grf_init() {
     graphs = NULL;
     graphcount = 0;
@@ -178,10 +183,9 @@ void grf_init() {
 
     graphscr = br_scrfromcurse();
 
-    panx = screen.width / 2.0f; /* Make sure to divide by floats */
-	pany = screen.height / 2.0f;
+    grf_center();
 	
-	sclex = scley = 4;
+	sclex = scley = 24;
 	updatescale(); /* Initial draw call as well */
 }
 

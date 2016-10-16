@@ -81,7 +81,6 @@ void grf_draw() {
         graphscr->color[i] = GRAPH_AXES;
     }
     br_clear(graphscr);
-    clear();
 
     attron(COLOR_PAIR(GRAPH_AXES));
 

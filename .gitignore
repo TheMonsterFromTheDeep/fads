@@ -1,5 +1,5 @@
-# Ignore built object files
-*.o
+# Ignore build directory
+build
 
 # ...and the built program file
 fads

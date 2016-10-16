@@ -33,5 +33,5 @@ $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
 clean :
 	rm -rf $(BUILD_DIR)
 
-install :
+install : $(BIN)
 	cp fads $(INSTALL_PATH)/bin

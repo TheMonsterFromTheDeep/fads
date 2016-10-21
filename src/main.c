@@ -7,6 +7,9 @@
 #include "graph.h"
 #include "terminal.h"
 
+#include "colormenu.h"
+#include "setup.h"
+
 #include "base.h"
 
 static void (*callback)(void);
@@ -15,11 +18,18 @@ void on_sigsegv(int signo) {
     quit(-1);
 }
 
-int main()
+int main(int argc, char **argv)
 {	
     setlocale(LC_ALL, ""); /* Required for unicode characters */
 
     sigset(SIGSEGV, on_sigsegv);
+
+    if(argc > 1) { //TODO: Implement better command-line options
+        if(!strcmp(argv[1], "--setup")) {
+            setup_run();
+            return 0;
+        }
+    }
 
 	initscr(); /* Curses init statement */
 	
@@ -27,9 +37,18 @@ int main()
 	cbreak();
     curs_set(0);
 
+    keypad(stdscr, TRUE);
+
 	if(has_colors()) {
 	    start_color(); /* Start curses color if possible */
 	}
+
+    if(argc > 1) {
+        if(!strcmp(argv[1], "--color-config")) {
+            ccfg_run();
+            return 0;
+        }
+    }
 
     init(); /* Init main program */
     grf_init(); /* Init graph module */

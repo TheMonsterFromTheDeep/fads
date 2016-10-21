@@ -6,6 +6,8 @@
 #include "graph.h"
 #include "expression.h"
 #include "brscr.h"
+#include "config.h"
+#include "colordefaults.h"
 
 #define W_HLINE 0x2501
 #define W_VLINE 0x2503
@@ -177,11 +179,20 @@ void grf_init() {
     grf_addgraph(expr_new_pow(expr_new_x(),expr_new_const(2)));
     grf_addgraph(expr_new_sin(expr_new_x()));
     
+    cfg cf = cfg_open("colors","r");
 
-    init_pair(GRAPH_AXES, COLOR_BLACK, COLOR_WHITE);
-    init_pair(GRAPH_RED, COLOR_RED, COLOR_WHITE);
-    init_pair(GRAPH_GREEN, COLOR_GREEN, COLOR_WHITE);
-    init_pair(GRAPH_BLUE, COLOR_BLUE, COLOR_WHITE);
+    int color_bg = cfg_read(cf, "color_bg", BG_DEFAULT);
+    int color_axes = cfg_read(cf, "color_axes", AXES_DEFAULT);
+    int color_curve1 = cfg_read(cf, "color_curve1", CURVE1_DEFAULT);
+    int color_curve2 = cfg_read(cf, "color_curve2", CURVE2_DEFAULT);
+    int color_curve3 = cfg_read(cf, "color_curve3", CURVE3_DEFAULT);
+
+    cfg_free(cf);
+
+    init_pair(GRAPH_AXES, color_axes, color_bg);
+    init_pair(GRAPH_RED, color_curve1, color_bg);
+    init_pair(GRAPH_GREEN, color_curve2, color_bg);
+    init_pair(GRAPH_BLUE, color_curve3, color_bg);
 
     graphscr = br_scrfromcurse();
 

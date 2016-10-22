@@ -29,6 +29,19 @@ int main(int argc, char **argv)
             setup_run();
             return 0;
         }
+        else if(!strcmp(argv[1], "--help")) {
+            puts("FADS - Graphing calculator for the terminal\n");
+            puts("Command line options:");
+            
+            puts("--color-config: run the FADS color configuration utility");
+            puts("--help: show this menu");
+            puts("--setup: overwrite all config files with default settings");
+            return 0;
+        }
+        else if(strcmp(argv[1], "--color-config")) {
+            printf("Unknown option \"%s\". Use --help for help.\n", argv[1]);
+            return 0;
+        }
     }
 
 	initscr(); /* Curses init statement */

@@ -63,13 +63,14 @@ static int is_right(int op) {
 }
 
 static int should_pop(int op1, int op2) {
+    if(op2 == '(') { return 0; }
     if(is_right(op2)) {
         return precedence(op2) < precedence(op1);
     }
     return precedence(op2) <= precedence(op1);
 }
 
-static expr *get_op(expr *out, int op) {
+static expr *get_op(int op) {
     printf("%c\n", op);
     switch(op) {
         case '+':
@@ -83,17 +84,17 @@ static expr *get_op(expr *out, int op) {
         case '^':
             return expr_new_pow(outstack[--outtop], outstack[--outtop]);
     }
-    return out;
+    return NULL;
 }
 
-static void pop_ops(expr **out, int nop) {
+static void pop_ops(int nop) {
     int op;
 
     while(optop > 0) {
         if(!should_pop(nop, opstack[optop - 1])) { break; }
         op = opstack[--optop];
         
-        expr *tmp = get_op(NULL, op);
+        expr *tmp = get_op(op);
         outstack[outtop++] = tmp;
     }
 
@@ -114,8 +115,6 @@ expr *eq_parse(const char *str) {
     opstack = malloc(sizeof(int) * strlen(str));
     optop = 0;
 
-    expr *out = NULL;
-
     int i = 0;
     while(str[i] != '\0') {
         if(is_num(str[i])) {
@@ -127,31 +126,44 @@ expr *eq_parse(const char *str) {
                 f += read_part(str, &i, 'f');
             }
             outstack[outtop++] = expr_new_const(f);
+            --i;
             printf("%f\n",f);
         }
         else if(str[i] == '.') {
             ++i;
             float f = read_part(str, &i, 'f');
             outstack[outtop++] = expr_new_const(f);
+            --i;
             printf("%f\n",f);
         }
+        else if(str[i] == 'x') {
+            outstack[outtop++] = expr_new_x();
+        }
         else if(is_op(str[i])) {
-            pop_ops(&out, str[i]);
+            pop_ops(str[i]);
+        }
+        else if(str[i] == '(') {
+            opstack[optop++] = '(';
+        }
+        else if(str[i] == ')') {
+            while(opstack[optop - 1] != '(') {
+                expr *tmp = get_op(opstack[--optop]);
+                outstack[outtop++] = tmp;
+            }
+            --optop;
         }
         ++i;
     }
 
     while(optop >= 0) {
-        expr *tmp = get_op(NULL, opstack[--optop]);
+        expr *tmp = get_op(opstack[--optop]);
         outstack[outtop++] = tmp;
     }
 
-    out = outstack[0];
-
-    if(out != NULL) {
-        printf("%f\n", expr_eval(out, 0));
-    }
+    printf("%f\n", expr_eval(outstack[0], 2.5));
 
     free(outstack);
     free(opstack);
+
+    return outstack[0];
 }

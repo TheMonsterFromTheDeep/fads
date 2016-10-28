@@ -71,7 +71,6 @@ static int should_pop(int op1, int op2) {
 }
 
 static expr *get_op(int op) {
-    printf("%c\n", op);
     switch(op) {
         case '+':
             return expr_new_add(outstack[--outtop], outstack[--outtop]);
@@ -115,6 +114,8 @@ expr *eq_parse(const char *str) {
     opstack = malloc(sizeof(int) * strlen(str));
     optop = 0;
 
+    expr *out;
+
     int i = 0;
     while(str[i] != '\0') {
         if(is_num(str[i])) {
@@ -127,14 +128,12 @@ expr *eq_parse(const char *str) {
             }
             outstack[outtop++] = expr_new_const(f);
             --i;
-            printf("%f\n",f);
         }
         else if(str[i] == '.') {
             ++i;
             float f = read_part(str, &i, 'f');
             outstack[outtop++] = expr_new_const(f);
             --i;
-            printf("%f\n",f);
         }
         else if(str[i] == 'x') {
             outstack[outtop++] = expr_new_x();
@@ -160,10 +159,10 @@ expr *eq_parse(const char *str) {
         outstack[outtop++] = tmp;
     }
 
-    printf("%f\n", expr_eval(outstack[0], 2.5));
+    out = outstack[0];
 
     free(outstack);
     free(opstack);
 
-    return outstack[0];
+    return out;
 }

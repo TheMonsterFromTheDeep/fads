@@ -48,7 +48,10 @@ void term_loop(void) {
     int ch = getch();
     if(ch == 10) {
         cmd[cmdc] = '\0';
-        grf_addgraph(eq_parse(cmd));
+        expr *eq = eq_parse(cmd);
+        if(eq != NULL) {
+            grf_addgraph(eq);
+        }
         mode_set(GRAPH);
         return;
     }
@@ -56,7 +59,7 @@ void term_loop(void) {
         mode_set(GRAPH);
         return;
     }
-    else if(ch == 127) {
+    else if(ch == 127 || ch == KEY_BACKSPACE) {
         if(cmdc > 0) {
             cmd[--cmdc] = ' ';
         }

@@ -145,7 +145,8 @@ expr *eq_parse(const char *str) {
             opstack[optop++] = '(';
         }
         else if(str[i] == ')') {
-            while(opstack[optop - 1] != '(') {
+            while(optop >= 0) {
+                if(opstack[optop - 1] == '(') { break; }
                 expr *tmp = get_op(opstack[--optop]);
                 outstack[outtop++] = tmp;
             }
@@ -155,6 +156,7 @@ expr *eq_parse(const char *str) {
     }
 
     while(optop >= 0) {
+        if(opstack[optop - 1] == ')') { break; } /* Abandon ship! (TODO: error handling) */
         expr *tmp = get_op(opstack[--optop]);
         outstack[outtop++] = tmp;
     }

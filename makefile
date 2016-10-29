@@ -6,7 +6,7 @@ SRC_DIR= ./src
 BUILD_DIR= ./build
 
 # Source files
-SRCS= main.c expression.c graph.c terminal.c brscr.c colormenu.c config.c setup.c equation.c
+SRCS= main.c expression.c graph.c terminal.c brscr.c colormenu.c config.c setup.c util/stack.c equation.c
 
 # Object files to build
 OBJS= $(SRCS:%.c=%.o)

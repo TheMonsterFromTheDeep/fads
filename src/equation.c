@@ -1,13 +1,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include "expression.h"
+#include "util/stack.h"
 
 #include "equation.h"
 
-static expr **outstack;
-static int outtop;
-static int *opstack;
-static int optop;
+//static expr **outstack;
+//static int outtop;
+//static int *opstack;
+//static int optop;
+
+static stack_generate(exprs, expr*);
+static stack_generate(ops, int);
 
 static int is_num(int c) {
     return c >= '0' && c <= '9';
@@ -73,15 +77,15 @@ static int should_pop(int op1, int op2) {
 static expr *get_op(int op) {
     switch(op) {
         case '+':
-            return expr_new_add(outstack[--outtop], outstack[--outtop]);
+            return expr_new_add(exprs_pop(), exprs_pop());
         case '-':
-            return expr_new_sub(outstack[--outtop], outstack[--outtop]);
+            return expr_new_sub(exprs_pop(), exprs_pop());
         case '*':
-            return expr_new_mul(outstack[--outtop], outstack[--outtop]);
+            return expr_new_mul(exprs_pop(), exprs_pop());
         case '/':
-            return expr_new_div(outstack[--outtop], outstack[--outtop]);
+            return expr_new_div(exprs_pop(), exprs_pop());
         case '^':
-            return expr_new_pow(outstack[--outtop], outstack[--outtop]);
+            return expr_new_pow(exprs_pop(), exprs_pop());
     }
     return NULL;
 }
@@ -89,15 +93,15 @@ static expr *get_op(int op) {
 static void pop_ops(int nop) {
     int op;
 
-    while(optop > 0) {
-        if(!should_pop(nop, opstack[optop - 1])) { break; }
-        op = opstack[--optop];
+    while(ops_can_pop()) {
+        if(!should_pop(nop, ops_read(ops->top - 1))) { break; }
+        op = ops_pop();
         
         expr *tmp = get_op(op);
-        outstack[outtop++] = tmp;
+        exprs_push(tmp);
     }
 
-    opstack[optop++] = nop;
+    ops_push(nop);
 }
 
 static int is_op(int c) {
@@ -109,10 +113,8 @@ static int is_op(int c) {
 }
 
 expr *eq_parse(const char *str) {
-    outstack = malloc(sizeof(expr*) * strlen(str));
-    outtop = 0;
-    opstack = malloc(sizeof(int) * strlen(str));
-    optop = 0;
+    exprs_init(64);
+    ops_init(64);
 
     expr *out;
 
@@ -126,45 +128,45 @@ expr *eq_parse(const char *str) {
                 ++i;
                 f += read_part(str, &i, 'f');
             }
-            outstack[outtop++] = expr_new_const(f);
+            exprs_push(expr_new_const(f));
             --i;
         }
         else if(str[i] == '.') {
             ++i;
             float f = read_part(str, &i, 'f');
-            outstack[outtop++] = expr_new_const(f);
+            exprs_push(expr_new_const(f));
             --i;
         }
         else if(str[i] == 'x') {
-            outstack[outtop++] = expr_new_x();
+            exprs_push(expr_new_x());
         }
         else if(is_op(str[i])) {
             pop_ops(str[i]);
         }
         else if(str[i] == '(') {
-            opstack[optop++] = '(';
+            ops_push('(');
         }
         else if(str[i] == ')') {
-            while(optop >= 0) {
-                if(opstack[optop - 1] == '(') { break; }
-                expr *tmp = get_op(opstack[--optop]);
-                outstack[outtop++] = tmp;
+            while(ops_can_pop()) {
+                if(ops_read(ops->top - 1) == '(') { break; }
+                expr *tmp = get_op(ops_pop());
+                exprs_push(tmp);
             }
-            --optop;
+            ops_pop();
         }
         ++i;
     }
 
-    while(optop >= 0) {
-        if(opstack[optop - 1] == ')') { break; } /* Abandon ship! (TODO: error handling) */
-        expr *tmp = get_op(opstack[--optop]);
-        outstack[outtop++] = tmp;
+    while(ops_can_pop()) {
+        if(ops_read(ops->top - 1) == ')') { break; } /* Abandon ship! (TODO: error handling) */
+        expr *tmp = get_op(ops_pop());
+        exprs_push(tmp);
     }
 
-    out = outstack[0];
+    out = exprs_read(0);
 
-    free(outstack);
-    free(opstack);
+    exprs_free();
+    ops_free();
 
     return out;
 }

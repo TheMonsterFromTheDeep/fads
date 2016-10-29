@@ -167,8 +167,59 @@ static int zeroy(int x, int y, int octant) {
 
 void br_colorline(brscr *scr, int x0, int y0, int x1, int y1, int color) {
     int octant;
+
+    if( (x0 < 0 && x1 < 0) ||
+        (y0 < 0 && y1 < 0) ||
+        (x0 > br_width(scr) && x1 > br_width(scr)) ||
+        (y0 > br_height(scr) && y1 > br_height(scr)) ) { return; }
+
+    float m;
+
+    if(x1 - x0 != 0) {
+        m = ((float)(y1 - y0)) / (x1 - x0);
+        if(x0 < 0) {
+            y0 -= (int)(m * -x0);
+            x0 = 0;
+        }
+        else if(x0 > br_width(scr)) {
+            y0 -= (int)(m * (x0 - br_width(scr)));
+            x0 = br_width(scr);
+        }
+        if(x1 < 0) {
+            y1 -= (int)(m * -x1);
+            x1 = 0;
+        }
+        else if(x1 > br_width(scr)) {
+            y1 -= (int)(m * (x1 - br_width(scr)));
+            x1 = br_width(scr);
+        }
+    }
+
+    if(y1 - y0 != 0) {
+        m = ((float)(x1 - x0)) / (y1 - y0);
+        if(y0 < 0) {
+            x0 -= (int)(m * -y0);
+            y0 = 0;
+        }
+        else if(y0 > br_height(scr)) {
+            x0 -= (int)(m * (y0 - br_height(scr)));
+            y0 = br_height(scr);
+        }
+        if(y1 < 0) {
+            x1 -= (int)(m * -y1);
+            y1 = 0;
+        }
+        else if(y1 > br_height(scr)) {
+            x1 -= (int)(m * (y0 - br_height(scr)));
+            y1 = br_height(scr);
+        }
+    }
+
     int dx = x1 - x0;
     int dy = y1 - y0;
+
+    
+
     if(dx >= 0) {
         octant = dy > 0 ? dy > dx :
                  dy < 0 ? 6 + (-dy < dx) :

@@ -29,8 +29,7 @@ const graph err = { NULL, 0 };
 static brscr *graphscr;
 
 static int nextcolor() {
-    if(currentcolor < COLOR_GRAPH_COUNT) { ++currentcolor; }
-    else { currentcolor = 0; }
+    currentcolor = (currentcolor + 1) % COLOR_GRAPH_COUNT;
     return currentcolor;
 }
 
@@ -176,8 +175,6 @@ void grf_init() {
     graphs = NULL;
     graphcount = 0;
     graphalloc = 0;
-    grf_addgraph(expr_new_pow(expr_new_x(),expr_new_const(2)));
-    grf_addgraph(expr_new_sin(expr_new_x()));
     
     cfg cf = cfg_open("colors","r");
 

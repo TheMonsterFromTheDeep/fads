@@ -2,6 +2,7 @@
 #include "base.h"
 #include "graph.h"
 #include "expression.h"
+#include "equation.h"
 
 #include "terminal.h"
 
@@ -47,12 +48,10 @@ void term_loop(void) {
     int ch = getch();
     if(ch == 10) {
         cmd[cmdc] = '\0';
-        if(!strcmp(cmd, "quit")) { /* TODO: Command parsing */
-            quit(0);
+        expr *eq = eq_parse(cmd);
+        if(eq != NULL) {
+            grf_addgraph(eq);
         }
-        if(!strcmp(cmd, "center")) { grf_center(); }
-        if(!strcmp(cmd, "testadd")) { grf_addgraph(expr_new_const(3)); }
-        if(!strcmp(cmd, "testrm")) { grf_removegraph(1); }
         mode_set(GRAPH);
         return;
     }
@@ -60,7 +59,7 @@ void term_loop(void) {
         mode_set(GRAPH);
         return;
     }
-    else if(ch == 127) {
+    else if(ch == 127 || ch == KEY_BACKSPACE) {
         if(cmdc > 0) {
             cmd[--cmdc] = ' ';
         }

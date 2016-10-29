@@ -13,6 +13,15 @@
 static stack_generate(exprs, expr*);
 static stack_generate(ops, int);
 
+typedef enum token {
+    NUMBER,
+    XVAL,
+    PARENS_LEFT,
+    PARENS_RIGHT,
+    OPERATOR,
+    MISC
+} token;
+
 static int is_num(int c) {
     return c >= '0' && c <= '9';
 }
@@ -112,6 +121,17 @@ static int is_op(int c) {
             c == '^';
 }
 
+static void checkmul(token next, token prev) {
+    if(next == OPERATOR || prev == OPERATOR
+    || next == MISC || prev == MISC) { return; }
+
+    if(prev == PARENS_LEFT || next == PARENS_RIGHT) { return; }
+
+    if(next != prev) {
+        pop_ops('*');
+    }
+}
+
 expr *eq_parse(const char *str) {
     exprs_init(64);
     ops_init(64);
@@ -119,8 +139,11 @@ expr *eq_parse(const char *str) {
     expr *out;
 
     int i = 0;
+    token previous = MISC;
+    token next;
     while(str[i] != '\0') {
         if(is_num(str[i])) {
+            checkmul(next = NUMBER, previous);
             float f = read_part(str, &i, 'i');
             if(str[i] == '\0') {
             }
@@ -130,23 +153,29 @@ expr *eq_parse(const char *str) {
             }
             exprs_push(expr_new_const(f));
             --i;
+            
         }
         else if(str[i] == '.') {
+            checkmul(next = NUMBER, previous);
             ++i;
             float f = read_part(str, &i, 'f');
             exprs_push(expr_new_const(f));
             --i;
         }
         else if(str[i] == 'x') {
+            checkmul(next = XVAL, previous);
             exprs_push(expr_new_x());
         }
         else if(is_op(str[i])) {
+            checkmul(next = OPERATOR, previous);
             pop_ops(str[i]);
         }
         else if(str[i] == '(') {
+            checkmul(next = PARENS_LEFT, previous);
             ops_push('(');
         }
         else if(str[i] == ')') {
+            checkmul(next = PARENS_RIGHT, previous);
             while(ops_can_pop()) {
                 if(ops_read(ops->top - 1) == '(') { break; }
                 expr *tmp = get_op(ops_pop());
@@ -155,6 +184,7 @@ expr *eq_parse(const char *str) {
             ops_pop();
         }
         ++i;
+        previous = next;
     }
 
     while(ops_can_pop()) {

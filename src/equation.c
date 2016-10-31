@@ -54,6 +54,9 @@ static int precedence(int op) {
         case '^':
         return 0;
 
+        case '>':
+        return 3;
+        
         case '+':
         case '-':
         default:
@@ -95,6 +98,10 @@ static expr *get_op(int op) {
             return expr_new_div(exprs_pop(), exprs_pop());
         case '^':
             return expr_new_pow(exprs_pop(), exprs_pop());
+        case '>':
+            return expr_new_range(exprs_pop(), exprs_pop());
+        case 'i':
+            return expr_new_int(exprs_pop(), exprs_pop());
     }
     return NULL;
 }
@@ -118,6 +125,7 @@ static int is_op(int c) {
             c == '-' ||
             c == '*' ||
             c == '/' ||
+            c == 'i' ||
             c == '^';
 }
 
@@ -168,7 +176,11 @@ expr *eq_parse(const char *str) {
         }
         else if(is_op(str[i])) {
             checkmul(next = OPERATOR, previous);
-            pop_ops(str[i]);
+            if(str[i] == '-' && str[i + 1] == '>') {
+                ++i;
+                pop_ops('>');
+            }
+            else { pop_ops(str[i]); }
         }
         else if(str[i] == '(') {
             checkmul(next = PARENS_LEFT, previous);

@@ -12,7 +12,6 @@ typedef enum tokentype {
     OPERATOR,
     LEFT_PAREN,
     RIGHT_PAREN,
-    FUNCTION,
     ARG_SEPARATOR,
     DX,
     END,
@@ -26,7 +25,10 @@ typedef enum operator {
     DIVIDE,
     EXPONENTIATE,
     PAREN,
-    ARROW
+    ARROW,
+    SIN,
+    COS,
+    TAN
 } operator;
 
 typedef struct token {
@@ -94,29 +96,57 @@ static operator operator_from_char(char c) {
 #define RESULT(tok, type, data) INIT(tok, type, data); goto end
 #define SRESULT(tok) t = (token){ tok, NULL }; goto end
 
+static int is_string_token(const char *str, const char *compare, int *index) {
+    int i = *index;
+
+    int j = 0;
+
+    for(;;) {
+        if(compare[j] == '\0') { break; }
+        if(str[i] != compare[j]) {
+            return 0;
+        }
+        ++i;
+        ++j;
+    }
+
+    /* if(is_letter(str[i])) { return 0; } */ /* TODO: Figure out whether this is a good idea */
+
+    *index = i - 1;
+    return 1;
+}
+
 static token get_string_token(const char *str, int *index) {
     token t;
 
     int i = *index;
 
-    // I really need to come up with a good way to do this stuff.. :(
-
-    if(str[i] == 'd' && str[i + 1] == 'x') {
-        ++i;
-        SRESULT(DX);
-    }
-
-    if(str[i] == 'x') {
+    if(is_string_token(str, "x", &i)) {
         SRESULT(X);
     }
 
-    if(str[i] == 'e') {
+    if(is_string_token(str, "e", &i)) {
         RESULT(CONSTANT, float, M_E);
     }
 
-    if(str[i] == 'p' && str[i + 1] == 'i') {
-        ++i;
+    if(is_string_token(str, "pi", &i)) {
         RESULT(CONSTANT, float, M_PI);
+    }
+
+    if(is_string_token(str, "dx", &i)) {
+        SRESULT(DX);
+    }
+
+    if(is_string_token(str, "sin", &i)) {
+        RESULT(OPERATOR, operator, SIN);
+    }
+
+    if(is_string_token(str, "cos", &i)) {
+        RESULT(OPERATOR, operator, COS);
+    }
+
+    if(is_string_token(str, "tan", &i)) {
+        RESULT(OPERATOR, operator, TAN);
     }
 
     SRESULT(UNDEFINED);
@@ -352,7 +382,25 @@ expr *eq_parse(const char *str) {
                 if(mismatched) { /* There was no left parentheses! */
                     goto cleanup;
                 }
+
                 ops_pop();
+
+                if(ops_can_pop()) {
+                    if(ops_read(ops->top - 1) >= SIN) {
+                        switch(ops_pop()) {
+                            case SIN:
+                                exprs_push(expr_new_sin(exprs_pop()));
+                                break;
+                            case COS:
+                                exprs_push(expr_new_cos(exprs_pop()));
+                                break;
+                            case TAN:
+                                exprs_push(expr_new_tan(exprs_pop()));
+                                break;
+                        }
+                    }
+                }
+                
                 break;
         }
 

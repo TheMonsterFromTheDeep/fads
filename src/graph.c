@@ -72,6 +72,7 @@ static void swap(num *a, num *b) {
 }
 
 static float plot(expr *e, float x) {
+    if(e == NULL) { return 0; } //TODO: Better error handling
     return try(expr_eval(e, trx(x)));
 }
 
@@ -121,6 +122,9 @@ static void updatescale() {
 }
 
 static graph newgraph(expr *e) {
+    if(e == NULL) {
+        return err;
+    }
     graph g = {
         e,
         SINGLE,
@@ -139,6 +143,10 @@ graph grf_getgraph(size_t index) {
 }
 
 graph grf_addgraph(expr *e) {
+    if(e == NULL) {
+        return err;
+    }
+
     graph ng = newgraph(e);
     
     if(graphcount == graphalloc) {

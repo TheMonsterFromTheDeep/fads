@@ -133,10 +133,14 @@ expr *expr_new() {
 }
 
 num expr_eval(expr *e, num x) {
+    if(e == NULL) {
+        return 0; //TODO: Dedicated expression error handling
+    }
     return e->evaluate(e->data, x);
 }
 
 void expr_free(expr *e) {
+    if(e == NULL) { return; }
     e->free(e->data);
     free(e->data);
     free(e);

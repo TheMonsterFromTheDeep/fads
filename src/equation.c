@@ -392,15 +392,19 @@ expr *eq_parse(const char *str) {
 
                 if(ops_can_pop()) {
                     if(ops_read(ops->top - 1) >= SIN) {
+                        expr *tmp = exprs_pop();
+                        if(tmp == NULL) {
+                            goto cleanup;
+                        }
                         switch(ops_pop()) {
                             case SIN:
-                                exprs_push(expr_new_sin(exprs_pop()));
+                                exprs_push(expr_new_sin(tmp));
                                 break;
                             case COS:
-                                exprs_push(expr_new_cos(exprs_pop()));
+                                exprs_push(expr_new_cos(tmp));
                                 break;
                             case TAN:
-                                exprs_push(expr_new_tan(exprs_pop()));
+                                exprs_push(expr_new_tan(tmp));
                                 break;
                         }
                     }

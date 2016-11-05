@@ -10,6 +10,7 @@ typedef enum tokentype {
     CONSTANT,
     X,
     OPERATOR,
+    FUNCTION,
     LEFT_PAREN,
     RIGHT_PAREN,
     ARG_SEPARATOR,
@@ -138,15 +139,15 @@ static token get_string_token(const char *str, int *index) {
     }
 
     if(is_string_token(str, "sin", &i)) {
-        RESULT(OPERATOR, operator, SIN);
+        RESULT(FUNCTION, operator, SIN);
     }
 
     if(is_string_token(str, "cos", &i)) {
-        RESULT(OPERATOR, operator, COS);
+        RESULT(FUNCTION, operator, COS);
     }
 
     if(is_string_token(str, "tan", &i)) {
-        RESULT(OPERATOR, operator, TAN);
+        RESULT(FUNCTION, operator, TAN);
     }
 
     SRESULT(UNDEFINED);
@@ -268,6 +269,7 @@ static int is_right(operator op) {
 
 static int should_pop(operator op1, operator op2) {
     if(op2 == PAREN) { return 0; }
+    if(op1 >= SIN || op2 >= SIN) { return 0; }
     if(is_right(op2)) {
         return precedence(op2) < precedence(op1);
     }
@@ -321,6 +323,8 @@ static int checkmul(tokentype next, tokentype prev) {
 
     if(prev == LEFT_PAREN || next == RIGHT_PAREN) { return 1; }
 
+    if(prev == FUNCTION) { return 1; }
+
     if(next != prev) {
         return pop_ops(MULTIPLY);
     }
@@ -359,6 +363,7 @@ expr *eq_parse(const char *str) {
             case LEFT_PAREN:
                 ops_push(PAREN);
                 break;
+            case FUNCTION:
             case OPERATOR:
                 if(!pop_ops(TDATA(tok,operator,0))) {
                     goto cleanup;

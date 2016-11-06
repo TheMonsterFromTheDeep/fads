@@ -360,7 +360,7 @@ static int is_right(operator op) {
 
 static int should_pop(operator op1, operator op2) {
     if(op2 == PAREN) { return 0; }
-    if(op1 >= SIN || op2 >= SIN) { return 0; }
+    if(op1 >= INTEGRAL || op2 >= INTEGRAL) { return 0; }
     if(is_right(op2)) {
         return precedence(op2) < precedence(op1);
     }
@@ -456,7 +456,7 @@ static int parse_back(operator begin, int close) {
 
 static int readfunc() {
     if(ops_can_pop()) {
-        if(ops_read(ops->top - 1) >= SIN) { /* TODO: More oganized */
+        if(ops_read(ops->top - 1) >= SIN) { /* TODO: More organized */
             if(!exprs_has_args(1)) {
                 return 0;
             }

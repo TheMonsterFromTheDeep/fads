@@ -21,7 +21,7 @@ void stack_free(stack *s) {
 
 void stack_realloc(stack *s, size_t size) {
     s->alloc *= 2;
-    if(s->alloc = 0) { s->alloc = 1; }
+    if(s->alloc == 0) { s->alloc = 1; }
     s->data = realloc(s->data, size * s->alloc);
 }
 

@@ -446,8 +446,8 @@ static int handle_token(token tok) {
 }
 
 expr *eq_parse(const char *str) {
-    exprs_init(1); /* 64 tokens is a reasonable starting amount */
-    ops_init(1);
+    exprs_init(64); /* 64 tokens is a reasonable starting amount */
+    ops_init(64);
 
     expr *out = NULL;
 

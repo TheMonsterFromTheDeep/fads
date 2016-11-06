@@ -28,10 +28,25 @@ typedef enum operator {
     EXPONENTIATE,
     PAREN,
     ARROW,
+    INTEGRAL,
     SIN,
     COS,
     TAN,
-    INTEGRAL
+    SEC,
+    CSC,
+    COT,
+    ARCSIN,
+    ARCCOS,
+    ARCTAN,
+    ARCSEC,
+    ARCCSC,
+    ARCCOT,
+    FLOOR,
+    CEIL,
+    ROUND,
+    ABS,
+    LN,
+    SQRT
 } operator;
 
 typedef struct token {
@@ -152,6 +167,66 @@ static token get_string_token(const char *str, int *index) {
         RESULT(FUNCTION, operator, TAN);
     }
 
+    if(is_string_token(str, "sec", &i)) {
+        RESULT(FUNCTION, operator, SEC);
+    }
+
+    if(is_string_token(str, "csc", &i)) {
+        RESULT(FUNCTION, operator, CSC);
+    }
+
+    if(is_string_token(str, "cot", &i)) {
+        RESULT(FUNCTION, operator, COT);
+    }
+
+    if(is_string_token(str, "arcsin", &i)) {
+        RESULT(FUNCTION, operator, ARCSIN);
+    }
+
+    if(is_string_token(str, "arccos", &i)) {
+        RESULT(FUNCTION, operator, ARCCOS);
+    }
+
+    if(is_string_token(str, "arctan", &i)) {
+        RESULT(FUNCTION, operator, ARCTAN);
+    }
+
+    if(is_string_token(str, "arcsec", &i)) {
+        RESULT(FUNCTION, operator, ARCSEC);
+    }
+
+    if(is_string_token(str, "arccsc", &i)) { /* TODO: Better parsing of this mess? */
+        RESULT(FUNCTION, operator, ARCCSC);
+    }
+
+    if(is_string_token(str, "arccot", &i)) {
+        RESULT(FUNCTION, operator, ARCCOT);
+    }
+
+    if(is_string_token(str, "floor", &i)) {
+        RESULT(FUNCTION, operator, FLOOR);
+    }
+
+    if(is_string_token(str, "ceil", &i)) {
+        RESULT(FUNCTION, operator, CEIL);
+    }
+
+    if(is_string_token(str, "round", &i)) {
+        RESULT(FUNCTION, operator, ROUND);
+    }
+
+    if(is_string_token(str, "abs", &i)) {
+        RESULT(FUNCTION, operator, ABS);
+    }
+
+    if(is_string_token(str, "ln", &i)) {
+        RESULT(FUNCTION, operator, LN);
+    }
+
+    if(is_string_token(str, "sqrt", &i)) {
+        RESULT(FUNCTION, operator, SQRT);
+    }
+
     if(is_string_token(str, "int", &i)) {
         RESULT(FUNCTION, operator, INTEGRAL);
     }
@@ -223,7 +298,7 @@ static token get_token(const char *str, int *index, tokentype last) {
 
     if(str[i] == '.') {
         ++i;
-        if(!is_num(str[i])) {
+        if(!is_num(str[i])) { /* If this part isn't a number, this is just a floating decimal point, which is meaningless */
             SRESULT(UNDEFINED);
         }
         float f = read_part(str, &i, 'f');
@@ -379,6 +454,73 @@ static int parse_back(operator begin, int close) {
     return 1;
 }
 
+static int readfunc() {
+    if(ops_can_pop()) {
+        if(ops_read(ops->top - 1) >= SIN) { /* TODO: More oganized */
+            if(!exprs_has_args(1)) {
+                return 0;
+            }
+            switch(ops_pop()) {
+                case SIN:
+                    exprs_push(expr_new_sin(exprs_pop()));
+                    break;
+                case COS:
+                    exprs_push(expr_new_cos(exprs_pop()));
+                    break;
+                case TAN:
+                    exprs_push(expr_new_tan(exprs_pop()));
+                    break;
+                case SEC:
+                    exprs_push(expr_new_sec(exprs_pop()));
+                    break;
+                case CSC:
+                    exprs_push(expr_new_csc(exprs_pop()));
+                    break;
+                case COT:
+                    exprs_push(expr_new_cot(exprs_pop()));
+                    break;
+                case ARCSIN:
+                    exprs_push(expr_new_arcsin(exprs_pop()));
+                    break;
+                case ARCCOS:
+                    exprs_push(expr_new_arccos(exprs_pop()));
+                    break;
+                case ARCTAN:
+                    exprs_push(expr_new_arctan(exprs_pop()));
+                    break;
+                case ARCSEC:
+                    exprs_push(expr_new_arcsec(exprs_pop()));
+                    break;
+                case ARCCSC:
+                    exprs_push(expr_new_arccsc(exprs_pop()));
+                    break;
+                case ARCCOT:
+                    exprs_push(expr_new_arccot(exprs_pop()));
+                    break;
+                case FLOOR:
+                    exprs_push(expr_new_floor(exprs_pop()));
+                    break;
+                case CEIL:
+                    exprs_push(expr_new_ceil(exprs_pop()));
+                    break;
+                case ROUND:
+                    exprs_push(expr_new_round(exprs_pop()));
+                    break;
+                case ABS:
+                    exprs_push(expr_new_abs(exprs_pop()));
+                    break;
+                case LN:
+                    exprs_push(expr_new_ln(exprs_pop()));
+                    break;
+                case SQRT:
+                    exprs_push(expr_new_sqrt(exprs_pop()));
+                    break;
+            }
+        }
+    }
+    return 1;
+}
+
 static int handle_token(token tok) {
     switch(tok.type) {
         case CONSTANT:
@@ -418,23 +560,8 @@ static int handle_token(token tok) {
                 return 0;
             }
 
-            if(ops_can_pop()) {
-                if(ops_read(ops->top - 1) >= SIN && ops_read(ops->top - 1) < INTEGRAL) {
-                    if(!exprs_has_args(1)) {
-                        return 0;
-                    }
-                    switch(ops_pop()) {
-                        case SIN:
-                            exprs_push(expr_new_sin(exprs_pop()));
-                            break;
-                        case COS:
-                            exprs_push(expr_new_cos(exprs_pop()));
-                            break;
-                        case TAN:
-                            exprs_push(expr_new_tan(exprs_pop()));
-                            break;
-                    }
-                }
+            if(!readfunc()) {
+                return 0;
             }
             
             break;

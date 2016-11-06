@@ -12,8 +12,9 @@ typedef enum tokentype {
     OPERATOR,
     FUNCTION,
     LEFT_PAREN,
-    RIGHT_PAREN,
     ARG_SEPARATOR,
+    RIGHT_PAREN,
+    INT_SEPARATOR,
     DX,
     END,
     UNDEFINED
@@ -29,7 +30,8 @@ typedef enum operator {
     ARROW,
     SIN,
     COS,
-    TAN
+    TAN,
+    INTEGRAL
 } operator;
 
 typedef struct token {
@@ -150,6 +152,10 @@ static token get_string_token(const char *str, int *index) {
         RESULT(FUNCTION, operator, TAN);
     }
 
+    if(is_string_token(str, "int", &i)) {
+        RESULT(FUNCTION, operator, INTEGRAL);
+    }
+
     SRESULT(UNDEFINED);
 
     end:
@@ -191,6 +197,10 @@ static token get_token(const char *str, int *index, tokentype last) {
         SRESULT(ARG_SEPARATOR);
     }
 
+    if(str[i] == ':') {
+        SRESULT(INT_SEPARATOR);
+    }
+
     if(str[i] == '(') {
         RESULT(LEFT_PAREN, operator, PAREN);
     }
@@ -222,8 +232,14 @@ static token get_token(const char *str, int *index, tokentype last) {
         RESULT(CONSTANT, float, f);
     }
 
-    if(is_op(str[i])) {
-        RESULT(OPERATOR, operator, operator_from_char(str[i]));
+    if(is_op(str[i])) { //TODO: Efficient way to read operators
+        if(str[i + 1] == '>') {
+            ++i;
+            RESULT(OPERATOR, operator, ARROW);
+        }
+        else {
+            RESULT(OPERATOR, operator, operator_from_char(str[i]));
+        }
     }
 
     SRESULT(UNDEFINED);
@@ -319,7 +335,9 @@ static int pop_ops(operator nop) {
 /* Returns 0 if multiplication should be done, according to syntax, but fails */
 static int checkmul(tokentype next, tokentype prev) {
     if(next == OPERATOR || prev == OPERATOR
-    || next == UNDEFINED || prev == UNDEFINED) { return 1; }
+    || next == UNDEFINED || prev == UNDEFINED
+    || next == INT_SEPARATOR || prev == INT_SEPARATOR
+    || next == DX || prev == DX) { return 1; }
 
     if(prev == LEFT_PAREN || next == RIGHT_PAREN) { return 1; }
 
@@ -352,8 +370,7 @@ expr *eq_parse(const char *str) {
         }
 
         switch(tok.type) {
-            case UNDEFINED: //TODO: Add error message
-                goto cleanup;
+            
             case CONSTANT:
                 exprs_push(expr_new_const(TDATA(tok, float, 0)));
                 break;
@@ -369,6 +386,49 @@ expr *eq_parse(const char *str) {
                     goto cleanup;
                 }
                 
+                break;
+            case INT_SEPARATOR:
+                mismatched = 1;
+                while(ops_can_pop()) {
+                    if(ops_read(ops->top - 1) == INTEGRAL) {
+                        mismatched = 0;
+                        break;
+                    }
+                    
+                    expr *tmp = get_op(ops_pop());
+                    if(tmp == NULL) {
+                        goto cleanup;
+                    }
+                    exprs_push(tmp);
+                }
+                if(mismatched) {
+                    goto cleanup;
+                }
+                break;
+            case DX:
+                mismatched = 1;
+                while(ops_can_pop()) {
+                    if(ops_read(ops->top - 1) == INTEGRAL) {
+                        mismatched = 0;
+                        break;
+                    }
+                    
+                    expr *tmp = get_op(ops_pop());
+                    if(tmp == NULL) {
+                        goto cleanup;
+                    }
+                    exprs_push(tmp);
+                }
+                if(mismatched) { /* There was no integral func! */
+                    goto cleanup;
+                }
+
+                if(exprs->top < 2) { /* Not enough arguments for integral */
+                    goto cleanup;
+                }
+
+                exprs_push(expr_new_int(exprs_pop(), exprs_pop()));
+                ops_pop();
                 break;
             case RIGHT_PAREN:
                 mismatched = 1;
@@ -391,7 +451,7 @@ expr *eq_parse(const char *str) {
                 ops_pop();
 
                 if(ops_can_pop()) {
-                    if(ops_read(ops->top - 1) >= SIN) {
+                    if(ops_read(ops->top - 1) >= SIN && ops_read(ops->top - 1) < INTEGRAL) {
                         expr *tmp = exprs_pop();
                         if(tmp == NULL) {
                             goto cleanup;
@@ -411,6 +471,9 @@ expr *eq_parse(const char *str) {
                 }
                 
                 break;
+            default:
+            case UNDEFINED: //TODO: Add error message
+                goto cleanup;
         }
 
         if(tok.data != NULL) { free(tok.data); }

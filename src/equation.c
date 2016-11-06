@@ -292,9 +292,13 @@ static int should_pop(operator op1, operator op2) {
     return precedence(op2) <= precedence(op1);
 }
 
+static int exprs_has_args(int amount) {
+    return exprs->top >= amount;
+}
+
 static expr *get_op(operator op) {
-    if(exprs->top < 2) {
-        return NULL; /* Return null when operator is impossible */
+    if(!exprs_has_args(2)) {
+        return NULL; /* Return null when not enough arguments for operator */
     }
     switch(op) {
         case ADD:
@@ -350,14 +354,104 @@ static int checkmul(tokentype next, tokentype prev) {
     return 1;
 }
 
+static int parse_back(operator begin, int close) {
+    int mismatched = 1;
+    while(ops_can_pop()) {
+        if(ops_read(ops->top - 1) == begin) {
+            mismatched = 0;
+            break;
+        }
+        
+        expr *tmp = get_op(ops_pop());
+        if(tmp == NULL) {
+            return 0;
+        }
+        exprs_push(tmp);
+    }
+    if(mismatched) { /* There was no left parentheses! */
+        return 0;
+    }
+
+    if(close) {
+        ops_pop();
+    }
+
+    return 1;
+}
+
+static int handle_token(token tok) {
+    switch(tok.type) {
+        case CONSTANT:
+            exprs_push(expr_new_const(TDATA(tok, float, 0)));
+            break;
+        case X:
+            exprs_push(expr_new_x());
+            break;
+        case LEFT_PAREN:
+            ops_push(PAREN);
+            break;
+        case FUNCTION:
+        case OPERATOR:
+            if(!pop_ops(TDATA(tok,operator,0))) {
+                return 0;
+            }
+            
+            break;
+        case INT_SEPARATOR:
+            if(!parse_back(INTEGRAL, 0)) {
+                return 0;
+            }
+            break;
+        case DX:
+            if(!parse_back(INTEGRAL, 1)) {
+                return 0;
+            }
+
+            if(!exprs_has_args(2)) { /* Not enough arguments for integral */
+                return 0;
+            }
+
+            exprs_push(expr_new_int(exprs_pop(), exprs_pop()));
+            break;
+        case RIGHT_PAREN:
+            if(!parse_back(PAREN, 1)) {
+                return 0;
+            }
+
+            if(ops_can_pop()) {
+                if(ops_read(ops->top - 1) >= SIN && ops_read(ops->top - 1) < INTEGRAL) {
+                    if(!exprs_has_args(1)) {
+                        return 0;
+                    }
+                    switch(ops_pop()) {
+                        case SIN:
+                            exprs_push(expr_new_sin(exprs_pop()));
+                            break;
+                        case COS:
+                            exprs_push(expr_new_cos(exprs_pop()));
+                            break;
+                        case TAN:
+                            exprs_push(expr_new_tan(exprs_pop()));
+                            break;
+                    }
+                }
+            }
+            
+            break;
+        default:
+        case UNDEFINED: //TODO: Add error message
+            return 0;
+    }
+    return 1;
+}
+
 expr *eq_parse(const char *str) {
-    exprs_init(64);
-    ops_init(64);
+    exprs_init(1); /* 64 tokens is a reasonable starting amount */
+    ops_init(1);
 
     expr *out = NULL;
 
     int i = 0;
-    int mismatched;
 
     token tok;
     tokentype lasttype = UNDEFINED;
@@ -365,125 +459,26 @@ expr *eq_parse(const char *str) {
     while(str[i] != '\0') {
         tok = get_token(str, &i, lasttype);
 
+        /* Generate multiplier token if needed */
         if(!checkmul(tok.type, lasttype)) {
             goto cleanup;
         }
 
-        switch(tok.type) {
-            
-            case CONSTANT:
-                exprs_push(expr_new_const(TDATA(tok, float, 0)));
-                break;
-            case X:
-                exprs_push(expr_new_x());
-                break;
-            case LEFT_PAREN:
-                ops_push(PAREN);
-                break;
-            case FUNCTION:
-            case OPERATOR:
-                if(!pop_ops(TDATA(tok,operator,0))) {
-                    goto cleanup;
-                }
-                
-                break;
-            case INT_SEPARATOR:
-                mismatched = 1;
-                while(ops_can_pop()) {
-                    if(ops_read(ops->top - 1) == INTEGRAL) {
-                        mismatched = 0;
-                        break;
-                    }
-                    
-                    expr *tmp = get_op(ops_pop());
-                    if(tmp == NULL) {
-                        goto cleanup;
-                    }
-                    exprs_push(tmp);
-                }
-                if(mismatched) {
-                    goto cleanup;
-                }
-                break;
-            case DX:
-                mismatched = 1;
-                while(ops_can_pop()) {
-                    if(ops_read(ops->top - 1) == INTEGRAL) {
-                        mismatched = 0;
-                        break;
-                    }
-                    
-                    expr *tmp = get_op(ops_pop());
-                    if(tmp == NULL) {
-                        goto cleanup;
-                    }
-                    exprs_push(tmp);
-                }
-                if(mismatched) { /* There was no integral func! */
-                    goto cleanup;
-                }
-
-                if(exprs->top < 2) { /* Not enough arguments for integral */
-                    goto cleanup;
-                }
-
-                exprs_push(expr_new_int(exprs_pop(), exprs_pop()));
-                ops_pop();
-                break;
-            case RIGHT_PAREN:
-                mismatched = 1;
-                while(ops_can_pop()) {
-                    if(ops_read(ops->top - 1) == PAREN) {
-                        mismatched = 0;
-                        break;
-                    }
-                    
-                    expr *tmp = get_op(ops_pop());
-                    if(tmp == NULL) {
-                        goto cleanup;
-                    }
-                    exprs_push(tmp);
-                }
-                if(mismatched) { /* There was no left parentheses! */
-                    goto cleanup;
-                }
-
-                ops_pop();
-
-                if(ops_can_pop()) {
-                    if(ops_read(ops->top - 1) >= SIN && ops_read(ops->top - 1) < INTEGRAL) {
-                        expr *tmp = exprs_pop();
-                        if(tmp == NULL) {
-                            goto cleanup;
-                        }
-                        switch(ops_pop()) {
-                            case SIN:
-                                exprs_push(expr_new_sin(tmp));
-                                break;
-                            case COS:
-                                exprs_push(expr_new_cos(tmp));
-                                break;
-                            case TAN:
-                                exprs_push(expr_new_tan(tmp));
-                                break;
-                        }
-                    }
-                }
-                
-                break;
-            default:
-            case UNDEFINED: //TODO: Add error message
-                goto cleanup;
+        /* Handle current token */
+        if(!handle_token(tok)) {
+            goto cleanup;
         }
 
+        /* Get rid of allocated data */
         if(tok.data != NULL) { free(tok.data); }
 
+        /* Next loop */
         ++i;
         lasttype = tok.type;
     }
 
     while(ops_can_pop()) {
-        if(ops_read(ops->top - 1) == PAREN) { goto cleanup; }
+        if(ops_read(ops->top - 1) == PAREN) { goto cleanup; } /* There shouldn't be any unevaluated parens */
         expr *tmp = get_op(ops_pop());
         if(tmp == NULL) {
             goto cleanup;
@@ -492,6 +487,8 @@ expr *eq_parse(const char *str) {
     }
 
     out = exprs_read(0);
+
+    /* Cleanup section - if there is a failure, these free's need to be done */
 
     cleanup:
 

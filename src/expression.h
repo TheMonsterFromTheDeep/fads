@@ -25,6 +25,8 @@ expr *expr_new_pow(expr*, expr*);
 expr *expr_new_sin(expr*);
 expr *expr_new_cos(expr*);
 expr *expr_new_tan(expr*);
+expr *expr_new_range(expr*,expr*);
+expr *expr_new_int(expr*,expr*);
 
 void expr_free(expr*);
 

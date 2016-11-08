@@ -227,8 +227,10 @@ num expr_eval(expr *e, num x) {
 
 void expr_free(expr *e) {
     if(e == NULL) { return; }
-    e->free(e->data);
-    free(e->data);
+    if(e->data != NULL) { /* It is valid to have no data */
+        e->free(e->data);
+        free(e->data);
+    }
     free(e);
 }
 
@@ -244,6 +246,7 @@ expr *expr_new_const(num val) {
 expr *expr_new_x() {
     expr *e = expr_new();
     e->evaluate = &evalx;
+    e->data = NULL; /* Make sure this is NULL! Otherwise we will have that free() issue! */
     e->free = &freenull;
     return e;
 }

@@ -122,15 +122,22 @@ static void updatescale() {
 }
 
 static graph newgraph(expr *e) {
-    if(e == NULL) {
-        return err;
-    }
     graph g = {
         e,
         SINGLE,
         nextcolor()
     };
     return g;
+}
+
+int grf_getcolor(size_t index) {
+    if(index >= graphcount) { return GRAPH_BLUE; } /* Default color */
+    return getcolorcode(graphs[index].color); /* TODO: More organized colors */
+}
+
+int grf_valid(size_t index) {
+    if(index >= graphcount) { return 0; }
+    return graphs[index].expression != NULL;
 }
 
 size_t grf_graphcount() {
@@ -143,10 +150,6 @@ graph grf_getgraph(size_t index) {
 }
 
 graph grf_addgraph(expr *e) {
-    if(e == NULL) {
-        return err;
-    }
-
     graph ng = newgraph(e);
     
     if(graphcount == graphalloc) {
@@ -168,6 +171,20 @@ void grf_removegraph(size_t index) {
     for(i = index; i < graphcount; ++i) { /* Graphcount has been decreased, but there is still a valid graph there */
         graphs[i] = graphs[i + 1];
     }
+}
+
+/*
+TODO: Standardized graph data repository that is easier to access than this mess
+
+Should include both graph expr* and graph string, as well as graph color
+*/
+void grf_replacegraph(size_t index, expr *e) {
+    if(index >= graphcount) { return; }
+    if(graphs[index].expression != NULL) {
+        expr_free(graphs[index].expression);
+    }
+
+    graphs[index].expression = e;
 }
 
 int grf_invalid(graph g) {
@@ -255,9 +272,15 @@ void grf_loop() {
         case 'q':
             quit(0);
             break;
+        case ' ':
+            mode_set(EDITOR);
+            break;
         case '.': /* This will be reimplemented soon... */
         case '>':
             mode_set(TERMINAL);
+            break;
+        case '\t': /* on tab: */
+            mode_return(); /* switch to previous mode */
     }
 }
 

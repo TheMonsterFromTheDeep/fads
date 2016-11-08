@@ -32,6 +32,10 @@ size_t grf_graphcount();
 graph grf_getgraph(size_t);
 graph grf_addgraph(expr*);
 void grf_removegraph(size_t);
+void grf_replacegraph(size_t,expr*);
+
+int grf_getcolor(size_t);
+int grf_valid(size_t);
 
 const int grf_isinvalid(graph g);
 

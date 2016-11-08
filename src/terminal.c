@@ -10,8 +10,6 @@
 static char cmd[CMD_SIZE];
 static int cmdc; /* size of cmd */
 
-static int isvalid(int ch) { return ch >= 32 && ch <= 126; }
-
 void term_init(void) {
     init_pair(TERM_TEXT, COLOR_WHITE, COLOR_BLACK);
 }
@@ -46,16 +44,7 @@ void term_draw(void) {
 
 void term_loop(void) {
     int ch = getch();
-    if(ch == 10) {
-        cmd[cmdc] = '\0';
-        expr *eq = eq_parse(cmd);
-        if(eq != NULL) {
-            grf_addgraph(eq);
-        }
-        mode_set(GRAPH);
-        return;
-    }
-    else if(ch == '\033') {
+    if(ch == '\t') { /* Tab */
         mode_set(GRAPH);
         return;
     }

@@ -5,6 +5,7 @@
 
 typedef enum mode {
     GRAPH,
+    EDITOR,
     TERMINAL
 } mode;
 
@@ -19,6 +20,7 @@ typedef enum colors {
 void init(void);
 
 void mode_set(mode);
+void mode_return(void);
 
 void quit(int);
 
@@ -28,5 +30,7 @@ struct {
 } screen;
 
 typedef float num;
+
+#define isvalid(ch) (ch >= 32 && ch <= 126)
 
 #endif

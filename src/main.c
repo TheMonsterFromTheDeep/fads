@@ -6,6 +6,7 @@
 #include "expression.h"
 #include "graph.h"
 #include "terminal.h"
+#include "editor.h"
 
 #include "colormenu.h"
 #include "setup.h"
@@ -13,6 +14,9 @@
 #include "base.h"
 
 static void (*callback)(void);
+
+static mode currentMode;
+static mode lastMode;
 
 void on_sigsegv(int signo) {
     quit(-1);
@@ -66,8 +70,11 @@ int main(int argc, char **argv)
     init(); /* Init main program */
     grf_init(); /* Init graph module */
     term_init(); /* Init term module */
+    ed_init(); /* Init editor module */
 	
 	mode_set(GRAPH); /* Set initial mode to graph */
+
+    lastMode = EDITOR; /* Initial mode to switch to on TAB */
 
     for(;;) { /* Main loop */
         callback();
@@ -79,6 +86,8 @@ void init(void) {
 }
 
 void mode_set(mode m) {
+    lastMode = currentMode;
+    currentMode = m;
     switch(m) {
         case GRAPH:
             callback = &grf_loop;
@@ -88,7 +97,15 @@ void mode_set(mode m) {
             callback = &term_loop;
             term_activate(); /* TODO: Implement structured system for this */
             break;
+        case EDITOR:
+            callback = &ed_loop;
+            ed_activate();
+            break;
     }
+}
+
+void mode_return() {
+    mode_set(lastMode);
 }
 
 void quit(int status) {

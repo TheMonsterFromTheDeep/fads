@@ -1,6 +1,6 @@
 #include <curses.h>
 #include "base.h"
-#include "graph.h"
+#include "grapher.h"
 #include "expression.h"
 #include "equation.h"
 

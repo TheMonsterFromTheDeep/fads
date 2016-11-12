@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <signal.h>
+#include <zlib/zentry.h>
 
 #include "expression.h"
-#include "graph.h"
+#include "grapher.h"
 #include "terminal.h"
 #include "editor.h"
+#include "graph.h"
 
 #include "colormenu.h"
 #include "setup.h"
@@ -18,33 +20,28 @@ static void (*callback)(void);
 static mode currentMode;
 static mode lastMode;
 
-void on_sigsegv(int signo) {
-    quit(-1);
-}
+void entry(zargs args) {
+    exit_handler = &quit; /* Set exit handler */
 
-int main(int argc, char **argv)
-{	
     setlocale(LC_ALL, ""); /* Required for unicode characters */
 
-    sigset(SIGSEGV, on_sigsegv);
-
-    if(argc > 1) { //TODO: Implement better command-line options
-        if(!strcmp(argv[1], "--setup")) {
+    if(args.count > 1) { //TODO: Implement better command-line options
+        if(!strcmp(args.get[1], "--setup")) {
             setup_run();
-            return 0;
+            return;
         }
-        else if(!strcmp(argv[1], "--help")) {
+        else if(!strcmp(args.get[1], "--help")) {
             puts("FADS - Graphing calculator for the terminal\n");
             puts("Command line options:");
             
             puts("--color-config: run the FADS color configuration utility");
             puts("--help: show this menu");
             puts("--setup: overwrite all config files with default settings");
-            return 0;
+            return;
         }
-        else if(strcmp(argv[1], "--color-config")) {
-            printf("Unknown option \"%s\". Use --help for help.\n", argv[1]);
-            return 0;
+        else if(strcmp(args.get[1], "--color-config")) {
+            printf("Unknown option \"%s\". Use --help for help.\n", args.get[1]);
+            return;
         }
     }
 
@@ -60,12 +57,14 @@ int main(int argc, char **argv)
 	    start_color(); /* Start curses color if possible */
 	}
 
-    if(argc > 1) {
-        if(!strcmp(argv[1], "--color-config")) {
+    if(args.count > 1) {
+        if(!strcmp(args.get[1], "--color-config")) {
             ccfg_run();
-            return 0;
+            return;
         }
     }
+
+    graph_setup(); /* Setup graph data */
 
     init(); /* Init main program */
     grf_init(); /* Init graph module */
@@ -108,14 +107,12 @@ void mode_return() {
     mode_set(lastMode);
 }
 
-void quit(int status) {
+int quit() {
     endwin(); /* Exit curses mode */
 
     grf_end(); /* Tell graphing module to exit */
 
-    if(status == -1) {
-        puts("Quitting: Segmentation fault.");
-    }
+    graph_freeall(); /* Free graph data */
 
-    exit(status);
+    exit(0);
 }

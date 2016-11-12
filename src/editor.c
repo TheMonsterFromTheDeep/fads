@@ -3,8 +3,9 @@
 
 #include "base.h"
 #include "expression.h"
-#include "graph.h"
+#include "grapher.h"
 #include "editor.h"
+#include "graph.h"
 
 #include "equation.h"
 
@@ -30,7 +31,7 @@ void ed_init() {
 
     current = 0;
 
-    grf_addgraph(NULL);
+    zlist_add(graphs, graph_create(NULL));
 }
 
 void ed_draw() {
@@ -52,8 +53,9 @@ void ed_draw() {
                 }
             }
             else {
-                if(grf_valid(eqc)) { 
-                    attron(COLOR_PAIR(grf_getcolor(eqc)));
+                graph g = zlist_get(graphs, eqc);
+                if(graph_valid(g)) { 
+                    attron(COLOR_PAIR(g.color));
                     addstr("[@]");
                     attron(COLOR_PAIR(GRAPH_AXES));
                 }
@@ -98,14 +100,14 @@ void ed_loop() {
     else if(ch == 127 || ch == KEY_BACKSPACE) {
         if(equations[current].length > 0) {
             equations[current].data[--equations[current].length]= '\0';
-            grf_replacegraph(0, eq_parse(equations[current].data));
+            graphs->expression = eq_parse(equations[current].data);
         }
     }
     else if(isvalid(ch)) { /* TODO: Create a generalized typing module for this & terminal */
         if(equations[current].length < 255) {
             equations[current].data[equations[current].length++] = (char)ch;
             expr *new = eq_parse(equations[current].data);
-            grf_replacegraph(0, new);
+            graphs->expression = new;
         }
     }
     ed_draw();

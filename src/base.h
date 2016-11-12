@@ -22,7 +22,7 @@ void init(void);
 void mode_set(mode);
 void mode_return(void);
 
-void quit(int);
+int quit(void);
 
 struct {
     int width;

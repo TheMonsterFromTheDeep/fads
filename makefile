@@ -6,7 +6,7 @@ SRC_DIR= ./src
 BUILD_DIR= ./build
 
 # Source files
-SRCS= main.c expression.c graph.c editor.c terminal.c brscr.c colormenu.c config.c setup.c util/stack.c equation.c
+SRCS= main.c expression.c grapher.c editor.c terminal.c brscr.c colormenu.c config.c setup.c util/stack.c equation.c graph.c
 
 # Object files to build
 OBJS= $(SRCS:%.c=%.o)
@@ -15,7 +15,7 @@ OBJS= $(SRCS:%.c=%.o)
 DEPS= $(OBJS:%.o=$(BUILD_DIR)/%.d)
 
 # Flags for the compiler
-CFLAGS= -lncursesw -lm
+CFLAGS= -lncursesw -lm -lzlib
 
 # Default path for make install
 INSTALL_PATH?=/usr/local

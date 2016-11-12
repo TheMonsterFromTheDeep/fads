@@ -10,28 +10,12 @@
 #include "equation.h"
 
 static size_t current;
-
-typedef struct equation { 
-    char data[256];
-    size_t length;
-} equation;
-static equation *equations;
-static size_t eq_count;
+static size_t cursor;
 
 void ed_init() {
-    size_t i;
-
-    equations = malloc(sizeof(equation));
-    eq_count = 1;
-
-    for(i = 0; i < 256; ++i) {
-        equations[0].data[i] = '\0';
-    }
-    equations[0].length = 0;
-
     current = 0;
 
-    zlist_add(graphs, graph_create(NULL));
+    zlist_add(graphs, graph_create());
 }
 
 void ed_draw() {
@@ -46,7 +30,7 @@ void ed_draw() {
 
     for(y = 0; y < screen.height; ++y) {
         move(y, 0);
-        if((y - 1) / 2 < eq_count) {
+        if((y - 1) / 2 < zlist_size(graphs)) {
             if (y % 2 == 0) {
                 for(x = 0; x < screen.width / 2; ++x) {
                     addch('-');
@@ -66,10 +50,15 @@ void ed_draw() {
                 addch(' ');
                 eq = 0;
                 for(x = 4; x < screen.width / 2; ++x) {
-                    if(equations[eqc].data[eq] != '\0') {
-                        addch(equations[eqc].data[eq++]);
+                    if(eq == g.equation->size && eqc == current) {
+                        attron(A_REVERSE);
+                    }
+                    if(eq < g.equation->size) {
+                        addch(zstr_at(g.equation, eq));
                     }
                     else { addch(' '); }
+                    attroff(A_REVERSE);
+                    ++eq;
                 }
                 ++eqc;
             }
@@ -91,6 +80,8 @@ void ed_activate() {
 }
 
 void ed_loop() {
+    graph *cg = zlist_get_ptr(graphs, current);
+
     int ch = getch();
     if(ch == '\t') { /* Tab */
         grf_panby(screen.width / -2, 0);
@@ -98,17 +89,21 @@ void ed_loop() {
         return;
     }
     else if(ch == 127 || ch == KEY_BACKSPACE) {
-        if(equations[current].length > 0) {
-            equations[current].data[--equations[current].length]= '\0';
-            graphs->expression = eq_parse(equations[current].data);
-        }
+        zstr_backspace(cg->equation);
+        graph_update(current);
     }
     else if(isvalid(ch)) { /* TODO: Create a generalized typing module for this & terminal */
-        if(equations[current].length < 255) {
-            equations[current].data[equations[current].length++] = (char)ch;
-            expr *new = eq_parse(equations[current].data);
-            graphs->expression = new;
+        zstr_catb(cg->equation,(char)ch);
+        graph_update(current);
+    }
+    else if(ch == KEY_DOWN || ch == '\n') {
+        current++;
+        if(current >= zlist_size(graphs)) {
+            zlist_add(graphs, graph_create());
         }
+    }
+    else if(ch == KEY_UP) {
+        if(current > 0) { --current; }
     }
     ed_draw();
 }

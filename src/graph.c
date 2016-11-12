@@ -1,7 +1,10 @@
 #include <zlib/zlist.h>
+#include <zlib/zstr.h>
+#include <stdlib.h>
 
 #include "graph.h"
 #include "expression.h"
+#include "equation.h"
 
 static int currentcolor;
 
@@ -10,9 +13,10 @@ static int nextcolor() {
     return currentcolor + GRAPH_RED;
 }
 
-graph graph_create(expr *e) {
+graph graph_create() {
     return (graph){
-        e,
+        NULL,
+        zstr_empty(),
         nextcolor()
     };
 }
@@ -25,9 +29,15 @@ void graph_setup() {
     zlist_init(graphs, 0);
 }
 
+void graph_update(size_t index) {
+    graph *ptr = zlist_get_ptr(graphs, index);
+    ptr->expression = eq_parse(ptr->equation->data);
+}
+
 void graph_freeall() {
     size_t i;
     for(i = 0; i < zlist_size(graphs); ++i) {
         expr_free(zlist_get(graphs, i).expression);
+        zstr_free(zlist_get(graphs, i).equation);
     }
 }

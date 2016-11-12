@@ -78,11 +78,13 @@ void grf_draw() {
     for(i = 0; i < zlist_size(graphs); ++i) {
         graph g = zlist_get(graphs, i);
 
-        lasty = (int)roundf(plot(g.expression, -1));
-        for(x = 0; x < br_width(graphscr); ++x) {
-            y = (int)roundf(plot(g.expression, x));
-            br_colorline(graphscr, x - 1, lasty, x, y, g.color);
-            lasty = y;
+        if(graph_valid(g)) {
+            lasty = (int)roundf(plot(g.expression, -1));
+            for(x = 0; x < br_width(graphscr); ++x) {
+                y = (int)roundf(plot(g.expression, x));
+                br_colorline(graphscr, x - 1, lasty, x, y, g.color);
+                lasty = y;
+            }
         }
     }
 

@@ -21,7 +21,7 @@ static mode currentMode;
 static mode lastMode;
 
 void entry(zargs args) {
-    exit_handler = &quit; /* Set exit handler */
+    set_exit_handler(&quit); /* Set exit handler */
 
     setlocale(LC_ALL, ""); /* Required for unicode characters */
 

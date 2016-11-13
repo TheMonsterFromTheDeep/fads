@@ -93,7 +93,7 @@ void ed_loop() {
         graph_update(current);
     }
     else if(isvalid(ch)) { /* TODO: Create a generalized typing module for this & terminal */
-        zstr_catb(cg->equation,(char)ch);
+        zstr_catc(cg->equation,(char)ch);
         graph_update(current);
     }
     else if(ch == KEY_DOWN || ch == '\n') {
